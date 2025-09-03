@@ -1,5 +1,4 @@
 import { Sidebar } from "@/components/dashboard/Sidebar";
-import { TopBar } from "@/components/dashboard/TopBar";
 import { MapSection } from "@/components/dashboard/MapSection";
 import { AnalyticsPanel } from "@/components/dashboard/AnalyticsPanel";
 
@@ -10,20 +9,14 @@ const Index = () => {
       <Sidebar />
       
       {/* Main Content */}
-      <div className="flex-1 flex flex-col">
-        {/* Top Bar */}
-        <TopBar />
-        
-        {/* Dashboard Content */}
-        <div className="flex-1 flex overflow-hidden">
-          {/* Map Section */}
-          <div className="flex-1 p-4">
-            <MapSection />
-          </div>
-          
-          {/* Analytics Panel */}
-          <AnalyticsPanel />
+      <div className="flex-1 flex overflow-hidden">
+        {/* Map Section */}
+        <div className="flex-1 p-4">
+          <MapSection />
         </div>
+        
+        {/* Analytics Panel */}
+        <AnalyticsPanel />
       </div>
     </div>
   );
