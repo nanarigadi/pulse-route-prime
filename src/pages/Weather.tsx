@@ -1,5 +1,5 @@
 import { Sidebar } from "@/components/dashboard/Sidebar";
-import { WeatherMap } from "@/components/weather/WeatherMap";
+import  WeatherMap  from "@/components/weather/WeatherMap";
 import { CongestionAlerts } from "@/components/weather/CongestionAlerts";
 
 const Weather = () => {

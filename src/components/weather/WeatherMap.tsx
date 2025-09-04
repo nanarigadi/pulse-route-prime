@@ -1,181 +1,156 @@
-import React, { useEffect, useRef, useState } from 'react';
+// src/components/weather/WeatherMap.tsx
+// @ts-nocheck
+import { MapContainer, TileLayer, Marker, Popup, useMapEvents } from "react-leaflet";
+import "leaflet/dist/leaflet.css";
+import L from "leaflet";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 
-export function WeatherMap() {
-  const mapContainer = useRef<HTMLDivElement>(null);
-  const [mapboxToken, setMapboxToken] = useState('');
-  const [showTokenInput, setShowTokenInput] = useState(true);
-  const [map, setMap] = useState<any>(null);
+// Fix Leaflet marker icon issue in React
+import iconUrl from "leaflet/dist/images/marker-icon.png";
+import iconShadow from "leaflet/dist/images/marker-shadow.png";
+const DefaultIcon = L.icon({ iconUrl, shadowUrl: iconShadow });
+L.Marker.prototype.options.icon = DefaultIcon;
 
-  const initializeMap = async (token: string) => {
-    if (!mapContainer.current || !token) return;
+// OpenWeatherMap API key
+const API_KEY = "160c77a3f7bdfc5b9a9098499af1846a";
 
-    try {
-      // Dynamically import mapbox-gl to avoid SSR issues
-      const mapboxgl = await import('mapbox-gl');
-      
-      mapboxgl.default.accessToken = token;
-      
-      const mapInstance = new mapboxgl.default.Map({
-        container: mapContainer.current,
-        style: 'mapbox://styles/mapbox/dark-v11',
-        center: [-74.006, 40.7128], // NYC coordinates
-        zoom: 10,
-        pitch: 45,
-      });
+// Handle clicks on the map
+function ClickHandler({ onClick }) {
+  useMapEvents({
+    click(e) {
+      onClick(e.latlng);
+    },
+  });
+  return null;
+}
 
-      mapInstance.on('load', () => {
-        // Add weather radar layer
-        mapInstance.addSource('weather-radar', {
-          type: 'raster',
-          tiles: [
-            'https://tilecache.rainviewer.com/v2/radar/{z}/{x}/{y}/2/1_1.png'
-          ],
-          tileSize: 256
+const WeatherMap = () => {
+  const odishaCoords: [number, number] = [20.2961, 85.8245]; // Bhubaneswar
+  const [overlay, setOverlay] = useState<"rain" | "clouds" | "temp">("rain");
+  const [weather, setWeather] = useState<any>(null);
+  const [clickData, setClickData] = useState<any>(null);
+
+  // Fetch live weather for Odisha (Bhubaneswar)
+  useEffect(() => {
+    fetch(
+      `https://api.openweathermap.org/data/2.5/weather?lat=${odishaCoords[0]}&lon=${odishaCoords[1]}&units=metric&appid=${API_KEY}`
+    )
+      .then((res) => res.json())
+      .then((data) => {
+        setWeather({
+          temperature: data.main.temp,
+          windspeed: data.wind.speed,
+          time: new Date(data.dt * 1000).toLocaleTimeString(),
         });
+      })
+      .catch((err) => console.error("Weather fetch failed", err));
+  }, []);
 
-        mapInstance.addLayer({
-          id: 'weather-layer',
-          type: 'raster',
-          source: 'weather-radar',
-          paint: {
-            'raster-opacity': 0.7
-          }
-        });
-
-        // Add precipitation prediction overlay
-        mapInstance.addSource('precipitation-forecast', {
-          type: 'geojson',
-          data: {
-            type: 'FeatureCollection',
-            features: [
-              {
-                type: 'Feature',
-                geometry: {
-                  type: 'Polygon',
-                  coordinates: [[
-                    [-74.1, 40.6],
-                    [-73.9, 40.6],
-                    [-73.9, 40.8],
-                    [-74.1, 40.8],
-                    [-74.1, 40.6]
-                  ]]
-                },
-                properties: {
-                  intensity: 'heavy'
-                }
-              },
-              {
-                type: 'Feature',
-                geometry: {
-                  type: 'Polygon',
-                  coordinates: [[
-                    [-74.2, 40.7],
-                    [-74.0, 40.7],
-                    [-74.0, 40.9],
-                    [-74.2, 40.9],
-                    [-74.2, 40.7]
-                  ]]
-                },
-                properties: {
-                  intensity: 'moderate'
-                }
-              }
-            ]
-          }
-        });
-
-        mapInstance.addLayer({
-          id: 'precipitation-heavy',
-          type: 'fill',
-          source: 'precipitation-forecast',
-          filter: ['==', ['get', 'intensity'], 'heavy'],
-          paint: {
-            'fill-color': '#dc2626',
-            'fill-opacity': 0.4
-          }
-        });
-
-        mapInstance.addLayer({
-          id: 'precipitation-moderate',
-          type: 'fill',
-          source: 'precipitation-forecast',
-          filter: ['==', ['get', 'intensity'], 'moderate'],
-          paint: {
-            'fill-color': '#f59e0b',
-            'fill-opacity': 0.3
-          }
-        });
-
-        // Add navigation controls
-        mapInstance.addControl(new mapboxgl.default.NavigationControl(), 'top-right');
-      });
-
-      setMap(mapInstance);
-      setShowTokenInput(false);
-    } catch (error) {
-      console.error('Error initializing map:', error);
-    }
+  // ✅ Overlay URLs (OpenWeatherMap)
+  const overlayUrls: Record<string, string> = {
+    rain: `https://tile.openweathermap.org/map/precipitation_new/{z}/{x}/{y}.png?appid=${API_KEY}`,
+    clouds: `https://tile.openweathermap.org/map/clouds_new/{z}/{x}/{y}.png?appid=${API_KEY}`,
+    temp: `https://tile.openweathermap.org/map/temp_new/{z}/{x}/{y}.png?appid=${API_KEY}`,
   };
 
-  const handleTokenSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (mapboxToken.trim()) {
-      initializeMap(mapboxToken.trim());
+  // ✅ Handle clicks for rainfall data
+  const handleMapClick = async (latlng: { lat: number; lng: number }) => {
+    try {
+      const res = await fetch(
+        `https://api.open-meteo.com/v1/forecast?latitude=${latlng.lat}&longitude=${latlng.lng}&hourly=precipitation`
+      );
+      const data = await res.json();
+      setClickData({
+        coords: latlng,
+        rain: data?.hourly?.precipitation?.[0] ?? "N/A",
+      });
+    } catch (err) {
+      console.error("Rain fetch failed", err);
     }
   };
 
   return (
-    <div className="relative w-full h-full">
-      {showTokenInput && (
-        <div className="absolute inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center">
-          <div className="bg-card p-6 rounded-lg border max-w-md w-full mx-4">
-            <h3 className="text-lg font-semibold mb-4">Enter Mapbox Token</h3>
-            <p className="text-sm text-muted-foreground mb-4">
-              Get your free Mapbox public token at{' '}
-              <a href="https://mapbox.com/" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
-                mapbox.com
-              </a>
-            </p>
-            <form onSubmit={handleTokenSubmit} className="space-y-4">
+    <div className="relative h-full w-full">
+      {/* Toggle Controls */}
+      <div className="absolute top-4 right-4 z-[1000] bg-white/80 p-2 rounded shadow space-x-2">
+        <Button
+          variant={overlay === "rain" ? "default" : "outline"}
+          size="sm"
+          onClick={() => setOverlay("rain")}
+        >
+          Rain
+        </Button>
+        <Button
+          variant={overlay === "clouds" ? "default" : "outline"}
+          size="sm"
+          onClick={() => setOverlay("clouds")}
+        >
+          Clouds
+        </Button>
+        <Button
+          variant={overlay === "temp" ? "default" : "outline"}
+          size="sm"
+          onClick={() => setOverlay("temp")}
+        >
+          Temp
+        </Button>
+      </div>
+
+      {/* Map */}
+      <MapContainer
+        center={odishaCoords}
+        zoom={7}
+        style={{ height: "100%", width: "100%", borderRadius: "12px" }}
+      >
+        {/* Base OSM tiles */}
+        <TileLayer
+          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          attribution="&copy; OpenStreetMap contributors"
+        />
+
+        {/* Dynamic Weather Overlay */}
+        {overlay && (
+          <TileLayer
+            key={overlay}
+            url={overlayUrls[overlay]}
+            attribution="&copy; OpenWeatherMap"
+            opacity={0.6}
+          />
+        )}
+
+        {/* Marker for Odisha capital weather */}
+        {weather && (
+          <Marker position={odishaCoords}>
+            <Popup>
               <div>
-                <Label htmlFor="mapbox-token">Mapbox Public Token</Label>
-                <Input
-                  id="mapbox-token"
-                  type="text"
-                  placeholder="pk.eyJ1..."
-                  value={mapboxToken}
-                  onChange={(e) => setMapboxToken(e.target.value)}
-                  className="mt-1"
-                />
+                <h3 className="font-semibold">Bhubaneswar Weather</h3>
+                <p>🌡 Temp: {weather.temperature}°C</p>
+                <p>💨 Wind: {weather.windspeed} m/s</p>
+                <p>⏰ Time: {weather.time}</p>
               </div>
-              <Button type="submit" className="w-full">
-                Load Weather Map
-              </Button>
-            </form>
-          </div>
-        </div>
-      )}
-      
-      <div ref={mapContainer} className="absolute inset-0 rounded-lg" />
-      
-      {!showTokenInput && (
-        <div className="absolute top-4 left-4 bg-card/80 backdrop-blur-sm rounded-lg p-3 border">
-          <h3 className="font-medium text-sm mb-2">Weather Layers</h3>
-          <div className="space-y-1 text-xs">
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 bg-destructive/40 rounded"></div>
-              <span>Heavy Rain Forecast</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 bg-amber-500/30 rounded"></div>
-              <span>Moderate Rain Forecast</span>
-            </div>
-          </div>
-        </div>
-      )}
+            </Popup>
+          </Marker>
+        )}
+
+        {/* Click handler for coordinates + rain forecast */}
+        <ClickHandler onClick={handleMapClick} />
+
+        {clickData && (
+          <Marker position={[clickData.coords.lat, clickData.coords.lng]}>
+            <Popup>
+              <div>
+                <h3 className="font-semibold">Clicked Location</h3>
+                <p>📍 Lat: {clickData.coords.lat.toFixed(4)}</p>
+                <p>📍 Lng: {clickData.coords.lng.toFixed(4)}</p>
+                <p>🌧 Rain (next hr): {clickData.rain} mm</p>
+              </div>
+            </Popup>
+          </Marker>
+        )}
+      </MapContainer>
     </div>
   );
-}
+};
+
+export default WeatherMap;
