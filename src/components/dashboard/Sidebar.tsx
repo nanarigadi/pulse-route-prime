@@ -5,7 +5,7 @@ import {
   AlertTriangle, 
   Cloud, 
   Calendar, 
-  Play, 
+  Camera, 
   Settings,
   Snowflake
 } from "lucide-react";
@@ -17,7 +17,7 @@ const navigationItems = [
   { name: "Emergency", href: "/emergency", icon: AlertTriangle },
   { name: "Weather", href: "/weather", icon: Cloud },
   { name: "Event Horizon", href: "/events", icon: Calendar },
-  { name: "Simulation", href: "/simulation", icon: Play },
+  { name: "Live Camera Feed", href: "/camera", icon: Camera },
   { name: "Settings", href: "/settings", icon: Settings },
 ];
 
