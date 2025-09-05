@@ -50,15 +50,7 @@ const weatherImpact = [
 
 const chartGridClass = "bg-gradient-card border border-border/50 backdrop-blur-glass";
 
-// Static city zone impact data for map and table
-const zones = [
-  { id: "Z1", name: "Downtown Core", level: "high" },
-  { id: "Z2", name: "North District", level: "moderate" },
-  { id: "Z3", name: "East Industrial", level: "low" },
-  { id: "Z4", name: "University Belt", level: "high" },
-  { id: "Z5", name: "West Suburbs", level: "moderate" },
-  { id: "Z6", name: "South Waterfront", level: "high" }
-] as const;
+// Static city zone impact data for table
 
 const zoneMetrics = [
   { zone: "Downtown Core", commuteReductionPct: 11.2, fuelSavedKL: 6.3, co2SavedTons: 14.1, weatherEfficiencyPct: 9.8 },
@@ -117,125 +109,94 @@ const Analytics = () => {
           <p className="text-xs text-muted-foreground">One-month comparison: AI-based system (With Website) vs Orthodox system (Without Website)</p>
         </div>
 
-        {/* KPI Impact Map (compact) */}
-        <Card className={chartGridClass}>
-          <CardHeader className="py-2 px-3">
-            <CardTitle className="text-xs">KPI Impact Map — City Zones</CardTitle>
-          </CardHeader>
-          <CardContent className="pt-0 px-3 pb-3">
-            <div className="h-36 grid grid-cols-3 gap-1.5">
-              {zones.map((z) => (
-                <div
-                  key={z.id}
-                  className={`rounded-md border p-2 flex flex-col justify-between ${
-                    z.level === "high" ? "bg-emerald-500/15 border-emerald-500/30" :
-                    z.level === "moderate" ? "bg-yellow-500/15 border-yellow-500/30" :
-                    "bg-red-500/15 border-red-500/30"
-                  }`}
-                >
-                  <div className="text-[9px] text-muted-foreground">{z.id}</div>
-                  <div className="text-[10px] font-medium leading-tight truncate">{z.name}</div>
-                  <div className="mt-1 text-[9px]">
-                    {z.level === "high" && <span className="text-emerald-600">High positive impact</span>}
-                    {z.level === "moderate" && <span className="text-yellow-600">Moderate impact</span>}
-                    {z.level === "low" && <span className="text-red-600">Low impact</span>}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+        {/* Charts in 2x2 matrix layout */}
+        <div className="grid grid-cols-2 gap-4">
+          <Card className={chartGridClass}>
+            <CardHeader className="py-2 px-3">
+              <CardTitle className="text-xs">Commute Time Reduction (%) — With vs Without</CardTitle>
+            </CardHeader>
+            <CardContent className="pt-0 px-3 pb-2">
+              <div className="h-48">
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={monthlyData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
+                    <XAxis dataKey="day" stroke="currentColor" className="text-[10px] fill-muted-foreground" />
+                    <YAxis unit="%" stroke="currentColor" className="text-[10px] fill-muted-foreground" />
+                    <Tooltip content={<CompactTooltip />} isAnimationActive={false} trigger="hover" position={{ x: 0, y: 0 }} offset={30} />
+                    <Legend wrapperStyle={{ fontSize: 10 }} />
+                    <Line type="monotone" name="With Nanarigadi" dataKey="commuteReductionWith" stroke="hsl(var(--primary))" strokeWidth={1.5} dot={false} />
+                    <Line type="monotone" name="Without Nanarigadi" dataKey="commuteReductionWithout" stroke="hsl(var(--muted-foreground))" strokeDasharray="4 4" strokeWidth={1.5} dot={false} />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+            </CardContent>
+          </Card>
 
-        {/* Charts row (compact, horizontal scroll to avoid overlap) */}
-        <div className="overflow-x-auto">
-          <div className="flex gap-3 min-w-max">
-            <Card className={`${chartGridClass} w-[280px] shrink-0`}>
-              <CardHeader className="py-2 px-3">
-                <CardTitle className="text-xs">Commute Time Reduction (%) — With vs Without</CardTitle>
-              </CardHeader>
-              <CardContent className="pt-0 px-3 pb-2">
-                <div className="h-32">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <LineChart data={monthlyData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
-                      <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
-                      <XAxis dataKey="day" stroke="currentColor" className="text-[10px] fill-muted-foreground" />
-                      <YAxis unit="%" stroke="currentColor" className="text-[10px] fill-muted-foreground" />
-                      <Tooltip content={<CompactTooltip />} isAnimationActive={false} trigger="hover" position={{ x: 0, y: 0 }} offset={30} />
-                      <Legend wrapperStyle={{ fontSize: 10 }} />
-                      <Line type="monotone" name="With Nanarigadi" dataKey="commuteReductionWith" stroke="hsl(var(--primary))" strokeWidth={1.5} dot={false} />
-                      <Line type="monotone" name="Without Nanarigadi" dataKey="commuteReductionWithout" stroke="hsl(var(--muted-foreground))" strokeDasharray="4 4" strokeWidth={1.5} dot={false} />
-                    </LineChart>
-                  </ResponsiveContainer>
-                </div>
-              </CardContent>
-            </Card>
+          <Card className={chartGridClass}>
+            <CardHeader className="py-2 px-3">
+              <CardTitle className="text-xs">Fuel Consumption (kL) — Waterfall by Day</CardTitle>
+            </CardHeader>
+            <CardContent className="pt-0 px-3 pb-2">
+              <div className="h-48">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={monthlyData} stackOffset="sign" margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
+                    <XAxis dataKey="day" stroke="currentColor" className="text-[10px] fill-muted-foreground" />
+                    <YAxis unit=" kL" stroke="currentColor" className="text-[10px] fill-muted-foreground" />
+                    <Tooltip content={<CompactTooltip />} isAnimationActive={false} trigger="hover" position={{ x: 0, y: 0 }} offset={30} />
+                    <Legend wrapperStyle={{ fontSize: 10 }} />
+                    <Bar name="Without Nanarigadi" dataKey="fuelBaseline" stackId="a" fill="hsl(var(--muted-foreground))" radius={[3, 3, 0, 0]} />
+                    <Bar name="Delta (With - Without)" dataKey="fuelDelta" stackId="a" fill="hsl(var(--success))" />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </CardContent>
+          </Card>
 
-            <Card className={`${chartGridClass} w-[280px] shrink-0`}>
-              <CardHeader className="py-2 px-3">
-                <CardTitle className="text-xs">Fuel Consumption (kL) — Waterfall by Day</CardTitle>
-              </CardHeader>
-              <CardContent className="pt-0 px-3 pb-2">
-                <div className="h-32">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={monthlyData} stackOffset="sign" margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
-                      <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
-                      <XAxis dataKey="day" stroke="currentColor" className="text-[10px] fill-muted-foreground" />
-                      <YAxis unit=" kL" stroke="currentColor" className="text-[10px] fill-muted-foreground" />
-                      <Tooltip content={<CompactTooltip />} isAnimationActive={false} trigger="hover" position={{ x: 0, y: 0 }} offset={30} />
-                      <Legend wrapperStyle={{ fontSize: 10 }} />
-                      <Bar name="Without Nanarigadi" dataKey="fuelBaseline" stackId="a" fill="hsl(var(--muted-foreground))" radius={[3, 3, 0, 0]} />
-                      <Bar name="Delta (With - Without)" dataKey="fuelDelta" stackId="a" fill="hsl(var(--success))" />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
-              </CardContent>
-            </Card>
+          <Card className={chartGridClass}>
+            <CardHeader className="py-2 px-3">
+              <CardTitle className="text-xs">CO₂ Emissions (tons) — With vs Without</CardTitle>
+            </CardHeader>
+            <CardContent className="pt-0 px-3 pb-2">
+              <div className="h-48">
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={monthlyData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
+                    <XAxis dataKey="day" stroke="currentColor" className="text-[10px] fill-muted-foreground" />
+                    <YAxis unit=" t" stroke="currentColor" className="text-[10px] fill-muted-foreground" />
+                    <Tooltip content={<CompactTooltip />} isAnimationActive={false} trigger="hover" position={{ x: 0, y: 0 }} offset={30} />
+                    <Legend wrapperStyle={{ fontSize: 10 }} />
+                    <Line type="monotone" name="With Nanarigadi" dataKey="co2With" stroke="hsl(var(--primary))" strokeWidth={1.5} dot={false} />
+                    <Line type="monotone" name="Without Nanarigadi" dataKey="co2Without" stroke="hsl(var(--destructive))" strokeDasharray="4 4" strokeWidth={1.5} dot={false} />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+            </CardContent>
+          </Card>
 
-            <Card className={`${chartGridClass} w-[280px] shrink-0`}>
-              <CardHeader className="py-2 px-3">
-                <CardTitle className="text-xs">CO₂ Emissions (tons) — With vs Without</CardTitle>
-              </CardHeader>
-              <CardContent className="pt-0 px-3 pb-2">
-                <div className="h-32">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <LineChart data={monthlyData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
-                      <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
-                      <XAxis dataKey="day" stroke="currentColor" className="text-[10px] fill-muted-foreground" />
-                      <YAxis unit=" t" stroke="currentColor" className="text-[10px] fill-muted-foreground" />
-                      <Tooltip content={<CompactTooltip />} isAnimationActive={false} trigger="hover" position={{ x: 0, y: 0 }} offset={30} />
-                      <Legend wrapperStyle={{ fontSize: 10 }} />
-                      <Line type="monotone" name="With Nanarigadi" dataKey="co2With" stroke="hsl(var(--primary))" strokeWidth={1.5} dot={false} />
-                      <Line type="monotone" name="Without Nanarigadi" dataKey="co2Without" stroke="hsl(var(--destructive))" strokeDasharray="4 4" strokeWidth={1.5} dot={false} />
-                    </LineChart>
-                  </ResponsiveContainer>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className={`${chartGridClass} w-[280px] shrink-0`}>
-              <CardHeader className="py-2 px-3">
-                <CardTitle className="text-xs">Weather Impact — Avg Commute Time Reduction (%)</CardTitle>
-              </CardHeader>
-              <CardContent className="pt-0 px-3 pb-2">
-                <div className="h-32">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={weatherImpact} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
-                      <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
-                      <XAxis dataKey="label" stroke="currentColor" className="text-[10px] fill-muted-foreground" />
-                      <YAxis unit="%" stroke="currentColor" className="text-[10px] fill-muted-foreground" />
-                      <Tooltip content={<CompactTooltip />} isAnimationActive={false} trigger="hover" position={{ x: 0, y: 0 }} offset={30} />
-                      <Legend wrapperStyle={{ fontSize: 10 }} />
-                      <Bar name="With Nanarigadi" dataKey="withWebsite" fill="hsl(var(--primary))" radius={[3, 3, 0, 0]} />
-                      <Bar name="Without Nanarigadi" dataKey="withoutWebsite" fill="hsl(var(--muted-foreground))" radius={[3, 3, 0, 0]} />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
+          <Card className={chartGridClass}>
+            <CardHeader className="py-2 px-3">
+              <CardTitle className="text-xs">Weather Impact — Avg Commute Time Reduction (%)</CardTitle>
+            </CardHeader>
+            <CardContent className="pt-0 px-3 pb-2">
+              <div className="h-48">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={weatherImpact} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
+                    <XAxis dataKey="label" stroke="currentColor" className="text-[10px] fill-muted-foreground" />
+                    <YAxis unit="%" stroke="currentColor" className="text-[10px] fill-muted-foreground" />
+                    <Tooltip content={<CompactTooltip />} isAnimationActive={false} trigger="hover" position={{ x: 0, y: 0 }} offset={30} />
+                    <Legend wrapperStyle={{ fontSize: 10 }} />
+                    <Bar name="With Nanarigadi" dataKey="withWebsite" fill="hsl(var(--primary))" radius={[3, 3, 0, 0]} />
+                    <Bar name="Without Nanarigadi" dataKey="withoutWebsite" fill="hsl(var(--muted-foreground))" radius={[3, 3, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
-        {/* Zone-wise Comparison Table (compact, scrollable) */}
+        {/* Zone-wise Comparison Table (with proper spacing) */}
         <Card className={chartGridClass}>
           <CardHeader className="py-2 px-3">
             <CardTitle className="text-xs">Zone-wise Impact Comparison</CardTitle>
