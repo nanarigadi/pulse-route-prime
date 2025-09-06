@@ -79,7 +79,7 @@ function CompactTooltip({ active, payload, label }: { active?: boolean; payload?
   if (safePayload.length === 0) return null;
 
   return (
-    <div style={tooltipBoxStyle} className="backdrop-blur supports-[backdrop-filter]:backdrop-blur-sm">
+    <div style={tooltipBoxStyle} className="backdrop-blur supports-[backdrop-filter]:backdrop-blur-sm CustomTooltip-animation">
       {label !== undefined && (
         <div style={tooltipLabelStyle} className="text-foreground">
           {typeof label === "number" ? `Day ${label}` : label}
@@ -122,7 +122,7 @@ const Analytics = () => {
                     <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
                     <XAxis dataKey="day" stroke="currentColor" className="text-[10px] fill-muted-foreground" />
                     <YAxis unit="%" stroke="currentColor" className="text-[10px] fill-muted-foreground" />
-                    <Tooltip content={<CompactTooltip />} isAnimationActive={false} trigger="hover" position={{ x: 0, y: 0 }} offset={30} />
+                    <Tooltip content={<CompactTooltip />} isAnimationActive={true} />
                     <Legend wrapperStyle={{ fontSize: 10 }} />
                     <Line type="monotone" name="With Nanarigadi" dataKey="commuteReductionWith" stroke="hsl(var(--primary))" strokeWidth={1.5} dot={false} />
                     <Line type="monotone" name="Without Nanarigadi" dataKey="commuteReductionWithout" stroke="hsl(var(--muted-foreground))" strokeDasharray="4 4" strokeWidth={1.5} dot={false} />
@@ -143,7 +143,7 @@ const Analytics = () => {
                     <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
                     <XAxis dataKey="day" stroke="currentColor" className="text-[10px] fill-muted-foreground" />
                     <YAxis unit=" kL" stroke="currentColor" className="text-[10px] fill-muted-foreground" />
-                    <Tooltip content={<CompactTooltip />} isAnimationActive={false} trigger="hover" position={{ x: 0, y: 0 }} offset={30} />
+                    <Tooltip content={<CompactTooltip />} isAnimationActive={true} />
                     <Legend wrapperStyle={{ fontSize: 10 }} />
                     <Bar name="Without Nanarigadi" dataKey="fuelBaseline" stackId="a" fill="hsl(var(--muted-foreground))" radius={[3, 3, 0, 0]} />
                     <Bar name="Delta (With - Without)" dataKey="fuelDelta" stackId="a" fill="hsl(var(--success))" />
@@ -164,7 +164,7 @@ const Analytics = () => {
                     <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
                     <XAxis dataKey="day" stroke="currentColor" className="text-[10px] fill-muted-foreground" />
                     <YAxis unit=" t" stroke="currentColor" className="text-[10px] fill-muted-foreground" />
-                    <Tooltip content={<CompactTooltip />} isAnimationActive={false} trigger="hover" position={{ x: 0, y: 0 }} offset={30} />
+                    <Tooltip content={<CompactTooltip />} isAnimationActive={true} />
                     <Legend wrapperStyle={{ fontSize: 10 }} />
                     <Line type="monotone" name="With Nanarigadi" dataKey="co2With" stroke="hsl(var(--primary))" strokeWidth={1.5} dot={false} />
                     <Line type="monotone" name="Without Nanarigadi" dataKey="co2Without" stroke="hsl(var(--destructive))" strokeDasharray="4 4" strokeWidth={1.5} dot={false} />
@@ -185,7 +185,7 @@ const Analytics = () => {
                     <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
                     <XAxis dataKey="label" stroke="currentColor" className="text-[10px] fill-muted-foreground" />
                     <YAxis unit="%" stroke="currentColor" className="text-[10px] fill-muted-foreground" />
-                    <Tooltip content={<CompactTooltip />} isAnimationActive={false} trigger="hover" position={{ x: 0, y: 0 }} offset={30} />
+                    <Tooltip content={<CompactTooltip />} isAnimationActive={true} />
                     <Legend wrapperStyle={{ fontSize: 10 }} />
                     <Bar name="With Nanarigadi" dataKey="withWebsite" fill="hsl(var(--primary))" radius={[3, 3, 0, 0]} />
                     <Bar name="Without Nanarigadi" dataKey="withoutWebsite" fill="hsl(var(--muted-foreground))" radius={[3, 3, 0, 0]} />
