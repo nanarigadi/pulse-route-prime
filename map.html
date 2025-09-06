@@ -1,0 +1,745 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Driven Traffic Simulator</title>
+
+    <!-- Leaflet.js CSS for the map -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+     integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+     crossorigin=""/>
+
+    <style>
+        /* Basic styling for the page and map */
+        body, html {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            font-family: "Inter", sans-serif;
+            background-color: #0b1f3a; /* Dark blue background */
+        }
+        #map {
+            width: 100%;
+            height: 100%;
+            background-color: #0b1f3a; /* Match dark blue background */
+        }
+        /* Custom zoom controls styling */
+        #zoom-controls {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+        .zoom-button {
+            background-color: #ffffff;
+            border: 1px solid #e5e7eb;
+            width: 40px;
+            height: 40px;
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #374151;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            transition: all 0.2s ease;
+        }
+        .zoom-button:hover {
+            background-color: #f9fafb;
+            border-color: #d1d5db;
+        }
+        .zoom-button:focus {
+            outline: 2px solid #2563eb;
+            outline-offset: 2px;
+        }
+        .zoom-button:active {
+            background-color: #e5e7eb;
+        }
+        /* Styling for the notification popup */
+        #notification-container {
+            position: absolute; /* positioned within the map container */
+            bottom: -100px; /* Start off-screen */
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 12px 24px;
+            background-color: #ffffff; /* White background for light theme */
+            color: #111827; /* Dark text color */
+            border-radius: 8px;
+            border: 1px solid #e5e7eb;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            z-index: 1000;
+            transition: bottom 0.5s ease-in-out;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        /* The show class will be added via JS to display the notification */
+        #notification-container.show {
+            bottom: 20px;
+        }
+        /* Icon styling within the notification */
+        .notification-icon {
+            font-size: 1.5rem;
+        }
+        /* Refresh button styling */
+        #refresh-button {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            z-index: 1001;
+            background-color: #2563eb;
+            color: white;
+            border: none;
+            width: 42px;
+            height: 42px;
+            border-radius: 9999px;
+            font-size: 0;
+            cursor: pointer;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        #refresh-button:hover {
+            background-color: #1d4ed8;
+        }
+        #refresh-button:focus {
+            outline: 2px solid #ffffff;
+            outline-offset: 2px;
+        }
+
+        /* Dashboard container styling */
+        .dashboard-container {
+            width: 100%;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #0b1f3a; /* Dark blue outside the map */
+        }
+        .map-container {
+            position: relative;
+            width: 70%;
+            height: 70%;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            border: 1px solid #e2e8f0;
+        }
+    </style>
+    <!-- Google Fonts for a modern look -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <!-- Dashboard container -->
+    <div class="dashboard-container">
+        <div class="map-container">
+    <!-- The div where the map will be rendered -->
+            <div id="map" role="application" aria-label="Interactive traffic heatmap of Bhubaneswar"></div>
+
+            <!-- Manual refresh button (inside map) -->
+            <button id="refresh-button" title="Refresh heatmap" aria-label="Refresh traffic heatmap data">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <polyline points="23 4 23 10 17 10"></polyline>
+                    <polyline points="1 20 1 14 7 14"></polyline>
+                    <path d="M3.51 9a9 9 0 0 1 14.13-3.36L23 10"></path>
+                    <path d="M20.49 15a9 9 0 0 1-14.13 3.36L1 14"></path>
+                </svg>
+            </button>
+
+            <!-- Custom zoom controls (inside map) -->
+            <div id="zoom-controls" role="group" aria-label="Map zoom controls">
+                <button id="zoom-in" class="zoom-button" aria-label="Zoom in" title="Zoom in">+</button>
+                <button id="zoom-out" class="zoom-button" aria-label="Zoom out" title="Zoom out">-</button>
+            </div>
+
+            <!-- Pop-up notifications (inside map) -->
+            <div id="notification-container" role="alert" aria-live="assertive" aria-label="Traffic notifications">
+                <span class="notification-icon" id="notification-icon" aria-hidden="true"></span>
+                <span id="notification-message"></span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Leaflet.js library -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+     integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+     crossorigin=""></script>
+
+    <script>
+        window.onload = function() {
+            // --- 1. INITIALIZE THE MAP ---
+            // Define strict geographical boundaries for Bhubaneswar city only
+            const corner1 = L.latLng(20.20, 85.75); // South-West corner (tighter bounds)
+            const corner2 = L.latLng(20.40, 85.90); // North-East corner (tighter bounds)
+            const bounds = L.latLngBounds(corner1, corner2);
+
+            // Set the map center to Bhubaneswar, India, with strict city limits
+            const map = L.map("map", {
+                center: [20.2961, 85.8245],
+                zoom: 13,
+                maxBounds: bounds, // Restricts panning outside of the defined bounds
+                maxBoundsViscosity: 1.0, // Prevents panning outside bounds completely
+                minZoom: 12,       // Prevents zooming out too far (city level)
+                maxZoom: 18,       // Allows detailed zoom within city
+                zoomControl: false // We will add a custom-positioned zoom control
+            });
+
+            // Pane to render roads above heatmap (default overlay z-index ~400)
+            map.createPane('roadsPane');
+            map.getPane('roadsPane').style.zIndex = 450;
+            map.getPane('roadsPane').style.pointerEvents = 'none';
+            // Make roads overlay invisible
+            map.getPane('roadsPane').style.opacity = '0';
+
+            // Pane for traffic nodes above roads
+            map.createPane('nodesPane');
+            map.getPane('nodesPane').style.zIndex = 500;
+            map.getPane('nodesPane').style.pointerEvents = 'none';
+            // Keep traffic nodes visible
+            map.getPane('nodesPane').style.opacity = '1';
+
+            // Using OpenStreetMap for the base map tiles. It is free and open.
+            L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+                maxZoom: 19,
+                attribution: "© <a href=\"http://www.openstreetmap.org/copyright\">OpenStreetMap</a>"
+            }).addTo(map);
+
+            // --- 2. (Heatmap removed) ---
+
+            // --- OSM ROAD NETWORK OVERLAY (current map bounds only) ---
+            let roadsLayer = L.layerGroup().addTo(map);
+            let roadsFetchTimer = null;
+            let lastRoadsBboxKey = null;
+            let roadGeometries = []; // array of { latlngs: [ [lat,lng], ... ], lengthMeters: number }
+
+            // Layer to hold traffic nodes and their highlight circles
+            const nodesLayer = L.layerGroup().addTo(map);
+            let nodesTimer = null;
+            let currentNodes = []; // { lat: number, lng: number, severity: 'red'|'yellow'|'green' }
+
+            function getRoadWeight() {
+                const z = map.getZoom();
+                if (z >= 16) return 3;
+                if (z >= 15) return 2.5;
+                if (z >= 14) return 2;
+                return 1.5;
+            }
+
+            function bboxKey(bounds) {
+                const s = bounds.getSouth().toFixed(5);
+                const w = bounds.getWest().toFixed(5);
+                const n = bounds.getNorth().toFixed(5);
+                const e = bounds.getEast().toFixed(5);
+                return `${s},${w},${n},${e}`;
+            }
+
+            async function loadRoadsForCurrentView() {
+                // Limit requests at low zooms to avoid huge queries
+                // Skip at low zooms to avoid huge queries and invisible thin lines
+                if (map.getZoom() < 12) {
+                    roadsLayer.clearLayers();
+                    return;
+                }
+                const bounds = map.getBounds();
+                const s = bounds.getSouth();
+                const w = bounds.getWest();
+                const n = bounds.getNorth();
+                const e = bounds.getEast();
+                const key = bboxKey(bounds);
+                if (key === lastRoadsBboxKey) return;
+                lastRoadsBboxKey = key;
+
+                const overpassQuery = `[
+                    out:json
+                    ][timeout:25];
+                    (
+                      way["highway"](${s},${w},${n},${e});
+                    );
+                    out geom;`;
+
+                try {
+                    const url = "https://overpass-api.de/api/interpreter?data=" + encodeURIComponent(overpassQuery.replace(/\n\s+/g, " "));
+                    const resp = await fetch(url);
+                    if (!resp.ok) throw new Error("Overpass error " + resp.status);
+                    const data = await resp.json();
+
+                    roadsLayer.clearLayers();
+                    nodesLayer.clearLayers();
+                    roadGeometries = [];
+                    if (!data.elements) return;
+
+                    for (const el of data.elements) {
+                        if (el.type === "way" && Array.isArray(el.geometry) && el.geometry.length > 1) {
+                            const latlngs = el.geometry.map(pt => [pt.lat, pt.lon]);
+                            // Compute approximate way length to bias towards main roads
+                            let lengthMeters = 0;
+                            for (let i = 0; i < latlngs.length - 1; i++) {
+                                const a = L.latLng(latlngs[i][0], latlngs[i][1]);
+                                const b = L.latLng(latlngs[i+1][0], latlngs[i+1][1]);
+                                lengthMeters += a.distanceTo(b);
+                            }
+                            roadGeometries.push({ latlngs, lengthMeters });
+                            // Style roads in subtle gray to overlay on base/heatmap
+                            L.polyline(latlngs, {
+                                pane: 'roadsPane',
+                                color: '#222222',
+                                weight: getRoadWeight(),
+                                opacity: 0.95,
+                                lineJoin: 'round',
+                                lineCap: 'round'
+                            }).addTo(roadsLayer);
+                        }
+                    }
+                    // After loading roads, generate traffic nodes
+                    refreshTrafficNodes();
+                    ensureNodesAutoRefresh();
+                } catch (err) {
+                    // Keep quiet in UI; log for debugging
+                    console.warn("Roads overlay failed:", err);
+                }
+            }
+
+            function scheduleRoadsFetch() {
+                if (roadsFetchTimer) clearTimeout(roadsFetchTimer);
+                roadsFetchTimer = setTimeout(loadRoadsForCurrentView, 400);
+            }
+
+            // Initial load and on map view changes (zoom/pan)
+            scheduleRoadsFetch();
+            map.on("moveend", scheduleRoadsFetch);
+            map.on("zoomend", scheduleRoadsFetch);
+
+            // --- Heat sampling strictly along roads ---
+            function interpolateLatLng(a, b, t) {
+                return [
+                    a[0] + (b[0] - a[0]) * t,
+                    a[1] + (b[1] - a[1]) * t
+                ];
+            }
+
+            // (Heatmap logic removed)
+
+            // --- Traffic nodes generation strictly along roads ---
+            function chooseWeightedWay(minLengthMeters = 200) {
+                const candidates = roadGeometries.filter(w => w.lengthMeters >= minLengthMeters);
+                const pool = candidates.length > 5 ? candidates : roadGeometries;
+                if (pool.length === 0) return null;
+                // Weight by length
+                const total = pool.reduce((sum, w) => sum + Math.max(1, w.lengthMeters), 0);
+                let r = Math.random() * total;
+                for (const w of pool) {
+                    r -= Math.max(1, w.lengthMeters);
+                    if (r <= 0) return w;
+                }
+                return pool[pool.length - 1];
+            }
+
+            function randomPointOnWay(latlngs) {
+                if (latlngs.length < 2) return latlngs[0];
+                const segIdx = Math.floor(Math.random() * (latlngs.length - 1));
+                const a = latlngs[segIdx];
+                const b = latlngs[segIdx + 1];
+                const t = Math.random();
+                return [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t];
+            }
+
+            function pickSeverity() {
+                const r = Math.random();
+                if (r < 0.25) return 'red';        // heavy
+                if (r < 0.60) return 'yellow';     // moderate
+                return 'green';                     // low
+            }
+
+            function colorFor(severity) {
+                if (severity === 'red') return '#ef4444';
+                if (severity === 'yellow') return '#f59e0b';
+                return '#22c55e';
+            }
+
+            function radiusFor(severity) {
+                // Smaller highlight areas for better coverage density
+                if (severity === 'red') return 120;
+                if (severity === 'yellow') return 100;
+                return 80;
+            }
+
+            function refreshTrafficNodes() {
+                nodesLayer.clearLayers();
+                currentNodes = [];
+                if (roadGeometries.length === 0) return;
+
+                // Much higher node count to cover the whole map
+                const mapSize = map.getSize();
+                const mapArea = mapSize.x * mapSize.y;
+                const targetCount = Math.min(150, Math.max(50, Math.floor(mapArea / 8000))); // Scale with map area
+
+                // Reduced gap to allow more coverage while still avoiding major overlaps
+                const minGapMeters = 15; // smaller spacing for better coverage
+
+                // Track placed nodes as Leaflet LatLng with their radii (in meters)
+                const placements = [];
+
+                // More attempts to find placements for higher density
+                const maxAttempts = targetCount * 50;
+                let placed = 0;
+                let attempts = 0;
+
+                while (placed < targetCount && attempts < maxAttempts) {
+                    attempts++;
+                    const way = chooseWeightedWay();
+                    if (!way) continue;
+
+                    const p = randomPointOnWay(way.latlngs);
+                    const severity = pickSeverity();
+                    const color = colorFor(severity);
+                    const areaRadius = radiusFor(severity);
+
+                    const pLL = L.latLng(p[0], p[1]);
+
+                    // Collision check against existing placements
+                    let collides = false;
+                    for (const existing of placements) {
+                        const centerDistance = pLL.distanceTo(existing.latlng);
+                        if (centerDistance < (areaRadius + existing.radius + minGapMeters)) {
+                            collides = true;
+                            break;
+                        }
+                    }
+
+                    if (collides) continue;
+
+                    // Accept placement
+                    placements.push({ latlng: pLL, radius: areaRadius });
+                    currentNodes.push({ lat: p[0], lng: p[1], severity, radius: areaRadius });
+
+                    // Draw highlight area
+                    L.circle(p, {
+                        pane: 'nodesPane',
+                        radius: areaRadius,
+                        color: color,
+                        weight: 1,
+                        opacity: 0.0,
+                        fillColor: color,
+                        fillOpacity: 0.35
+                    }).addTo(nodesLayer);
+
+                    // Draw node marker
+                    L.circleMarker(p, {
+                        pane: 'nodesPane',
+                        radius: 6,
+                        color: color,
+                        weight: 2,
+                        fillColor: color,
+                        fillOpacity: 1.0
+                    }).addTo(nodesLayer);
+
+                    placed++;
+                }
+            }
+
+            function ensureNodesAutoRefresh() {
+                if (nodesTimer) return;
+                nodesTimer = setInterval(refreshTrafficNodes, 30000);
+            }
+
+            // Hook refresh button to re-generate nodes and clear user markers
+            const refreshBtn = document.getElementById('refresh-button');
+            refreshBtn.addEventListener('click', function() {
+                clearAllUserMarkers();
+                refreshTrafficNodes();
+            });
+
+            // Helpers to toggle roads overlay visibility in the future
+            window.setRoadsVisible = function(visible) {
+                const pane = map.getPane('roadsPane');
+                if (!pane) return;
+                pane.style.opacity = visible ? '1' : '0';
+            };
+            
+            // Global function to clear all user markers (for debugging)
+            window.clearAllMarkers = clearAllUserMarkers;
+            
+            // Debug function to check marker status
+            window.debugMarkers = function() {
+                console.log('Current marker:', currentMarker);
+                console.log('Current circle:', currentCircle);
+                console.log('Last clicked location:', lastClickedLocation);
+                console.log('User markers layer count:', userMarkersLayer.getLayers().length);
+                console.log('Total map layers:', map.getLayers().length);
+            };
+            
+            // Control Signals handler function
+            window.handleControlSignals = function(lat, lng) {
+                // Close the popup first
+                if (currentMarker) {
+                    currentMarker.closePopup();
+                }
+                
+                // Show notification
+                showNotification(`Control signals activated for location: ${lat.toFixed(6)}, ${lng.toFixed(6)}`, "🚦");
+                
+                // You can integrate your frontend control signals logic here
+                console.log('Control Signals clicked for coordinates:', lat, lng);
+                
+                // Example: You could open a modal, send API request, etc.
+                // For now, just showing a notification
+            };
+
+
+
+            // --- CUSTOM ZOOM CONTROLS ---
+            const zoomInBtn = document.getElementById("zoom-in");
+            const zoomOutBtn = document.getElementById("zoom-out");
+            
+            zoomInBtn.addEventListener("click", () => {
+                map.zoomIn();
+            });
+            
+            zoomOutBtn.addEventListener("click", () => {
+                map.zoomOut();
+            });
+            
+
+
+            // --- 3. COORDINATE MAPPING FUNCTIONALITY ---
+
+            // Create a dedicated layer for user markers to ensure proper cleanup
+            const userMarkersLayer = L.layerGroup().addTo(map);
+            
+            // Add click event listener to map with marker toggle functionality
+            let currentMarker = null; // Store reference to current marker
+            let currentCircle = null; // Store reference to current circle
+            let lastClickedLocation = null; // Store last clicked coordinates
+            const clickTolerance = 0.0001; // Tolerance for considering same location (about 11 meters)
+            
+            // Function to clear all user markers - more aggressive approach
+            function clearAllUserMarkers() {
+                // Clear the layer group (this will remove both markers and circles)
+                userMarkersLayer.clearLayers();
+                
+                // Also manually remove any markers that might be directly on the map
+                map.eachLayer(function(layer) {
+                    if (layer instanceof L.Marker && layer !== currentMarker) {
+                        map.removeLayer(layer);
+                    }
+                });
+                
+                // Reset all tracking variables
+                currentMarker = null;
+                currentCircle = null;
+                lastClickedLocation = null;
+            }
+            
+            // Clear any existing markers on page load
+            clearAllUserMarkers();
+            
+            map.on("click", function(e) {
+                // Prevent rapid clicking that might cause multiple markers
+                if (currentMarker) {
+                    return; // Ignore clicks while a marker exists
+                }
+                
+                const lat = e.latlng.lat.toFixed(6);
+                const lng = e.latlng.lng.toFixed(6);
+                const currentLocation = [parseFloat(lat), parseFloat(lng)];
+                
+                // Check if clicking on the same location as before
+                if (lastClickedLocation) {
+                    const latDiff = Math.abs(currentLocation[0] - lastClickedLocation[0]);
+                    const lngDiff = Math.abs(currentLocation[1] - lastClickedLocation[1]);
+                    
+                    if (latDiff < clickTolerance && lngDiff < clickTolerance) {
+                        // Same location clicked - remove marker and circle
+                        clearAllUserMarkers();
+                        return;
+                    }
+                }
+                
+                // Different location or no existing marker - add/update marker
+                
+                // Clear all existing user markers first
+                clearAllUserMarkers();
+                
+                // Add new marker at clicked location
+                currentMarker = L.marker([lat, lng]).addTo(userMarkersLayer)
+                    .bindPopup(`Coordinates: ${lat}, ${lng}`)
+                    .openPopup();
+                
+                // Store the clicked location
+                lastClickedLocation = currentLocation;
+            });
+
+            // Helper to reverse geocode coordinates to a human-readable place name
+            async function reverseGeocode(lat, lng) {
+                try {
+                    const url = `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`;
+                    const resp = await fetch(url, { headers: { 'Accept': 'application/json' } });
+                    if (!resp.ok) throw new Error('reverse geocode failed');
+                    const data = await resp.json();
+                    return data.display_name || [data.address?.suburb, data.address?.city || data.address?.town || data.address?.village, data.address?.state].filter(Boolean).join(', ');
+                } catch (_) {
+                    return '';
+                }
+            }
+
+            // Add double-click event listener for 1km radius circle
+            map.on("dblclick", async function(e) {
+                const lat = e.latlng.lat;
+                const lng = e.latlng.lng;
+                
+                // Remove existing circle if it exists
+                if (currentCircle) {
+                    map.removeLayer(currentCircle);
+                }
+                
+                // Clear all existing user markers first (but keep the circle we're about to create)
+                userMarkersLayer.clearLayers();
+                currentMarker = null;
+                lastClickedLocation = null;
+                
+                // Create 1km radius circle (1000 meters)
+                currentCircle = L.circle([lat, lng], {
+                    color: '#2563eb',
+                    fillColor: '#3b82f6',
+                    fillOpacity: 0.2,
+                    weight: 2,
+                    opacity: 0.8,
+                    radius: 1000 // 1km radius in meters
+            }).addTo(userMarkersLayer);
+                
+                // Compute traffic analysis within 1km of clicked location using improved distance-weighted scoring
+                function severityToScore(sev) { return sev === 'red' ? 3 : (sev === 'yellow' ? 2 : 1); }
+                function scoreToLabel(avg) {
+                    if (avg >= 2.3) return 'High';
+                    if (avg >= 1.6) return 'Moderate';
+                    return 'Low';
+                }
+                const center = L.latLng(lat, lng);
+                let weightedSum = 0;
+                let totalWeight = 0;
+                let nearbyNodes = 0;
+                
+                for (const n of currentNodes) {
+                    const d = center.distanceTo([n.lat, n.lng]);
+                    if (d > 1000) continue; // ignore beyond 1km
+                    
+                    nearbyNodes++;
+
+                    // Improved weighting: give significant weight to all nearby nodes
+                    let w;
+                    if (d <= 200) {
+                        // Very close nodes get full weight
+                        w = 1.0;
+                    } else if (d <= 500) {
+                        // Medium distance nodes get good weight
+                        w = 0.8;
+                    } else {
+                        // Far nodes get reduced but still meaningful weight
+                        w = Math.max(0.3, 1 - (d - 500) / 500);
+                    }
+
+                    // Severity emphasis - red nodes have more impact
+                    const sevFactor = n.severity === 'red' ? 1.5 : (n.severity === 'yellow' ? 1.2 : 1.0);
+                    w *= sevFactor;
+
+                    const score = severityToScore(n.severity);
+                    weightedSum += score * w;
+                    totalWeight += w;
+                }
+                
+                // If no nodes nearby, default to Low
+                let label;
+                if (nearbyNodes === 0) {
+                    label = 'Low';
+                } else {
+                    const avg = totalWeight > 0 ? (weightedSum / totalWeight) : 1;
+                    label = scoreToLabel(avg);
+                }
+                
+                // Create marker immediately with basic info
+                const basicPopupHtml = `Coordinates: ${lat.toFixed(6)}, ${lng.toFixed(6)}<br>Traffic analysis: ${label}<br><button onclick="handleControlSignals(${lat}, ${lng})" style="margin-top: 8px; padding: 4px 8px; background: #2563eb; color: white; border: none; border-radius: 4px; cursor: pointer;">Control Signals</button>`;
+                
+                currentMarker = L.marker([lat, lng]).addTo(userMarkersLayer)
+                    .bindPopup(basicPopupHtml)
+                    .openPopup();
+                
+                // Update popup with location info asynchronously (non-blocking)
+                reverseGeocode(lat, lng).then(place => {
+                    if (currentMarker && map.hasLayer(currentMarker)) {
+                        const locationLine = place ? `Location: ${place}<br>` : '';
+                        const updatedPopupHtml = `${locationLine}Coordinates: ${lat.toFixed(6)}, ${lng.toFixed(6)}<br>Traffic analysis: ${label}<br><button onclick="handleControlSignals(${lat}, ${lng})" style="margin-top: 8px; padding: 4px 8px; background: #2563eb; color: white; border: none; border-radius: 4px; cursor: pointer;">Control Signals</button>`;
+                        currentMarker.setPopupContent(updatedPopupHtml);
+                    }
+                });
+                
+                lastClickedLocation = [lat, lng];
+            });
+
+
+
+            // (Legacy refresh removed; heatmap now refreshes via road-based sampler only)
+            // --- 4. SETUP NOTIFICATIONS ---
+            setupNotifications();
+        };
+        
+        // --- 5. NOTIFICATION SYSTEM LOGIC ---
+        function setupNotifications() {
+            const notificationContainer = document.getElementById("notification-container");
+            const notificationMessage = document.getElementById("notification-message");
+            const notificationIcon = document.getElementById("notification-icon");
+            let notificationTimer;
+
+            const notifications = [
+                { message: "High traffic congestion reported on Janpath Road.", icon: "🚦" },
+                { message: "Weather Alert: Heavy rainfall expected near KIIT Square.", icon: "🌧️" },
+                { message: "Accident reported near Rasulgarh Square. Please use alternate routes.", icon: "⚠️" },
+                { message: "Road closure on Cuttack-Puri Road for an event.", icon: "🚧" },
+                { message: "Breakdown reported near Khandagiri. Expect delays.", icon: "🛠️" },
+                { message: "Signal failure at Jaydev Vihar Square. Traffic personnel on duty.", icon: "🚨" },
+                { message: "VIP movement near Secretariat. Temporary lane restrictions.", icon: "🚔" },
+                { message: "Festival procession in Old Town. Diversions in place.", icon: "🎉" },
+                { message: "Road work on Nandankanan Road. Please drive slowly.", icon: "👷" },
+                { message: "Fog advisory for early hours. Maintain safe distance.", icon: "🌫️" },
+                { message: "Construction causing delays near Patia Square.", icon: "🏗️" },
+                { message: "Parking full near railway station. Use alternate parking.", icon: "🅿️" },
+                { message: "Fuel spill cleared near Baramunda. Traffic normalizing.", icon: "🧯" },
+                { message: "Marathon route active this morning. Several roads closed.", icon: "🏃" }
+            ];
+
+            window.showNotification = function(message, icon) {
+                if (notificationTimer) clearTimeout(notificationTimer);
+                
+                notificationMessage.textContent = message;
+                notificationIcon.textContent = icon;
+                notificationContainer.classList.add("show");
+                
+                // Announce to screen readers
+                notificationContainer.setAttribute('aria-label', `Traffic alert: ${message}`);
+
+                notificationTimer = setTimeout(() => {
+                    notificationContainer.classList.remove("show");
+                }, 5000);
+            }
+
+            setInterval(() => {
+                const randomNotification = notifications[Math.floor(Math.random() * notifications.length)];
+                showNotification(randomNotification.message, randomNotification.icon);
+            }, 15000);
+
+            setTimeout(() => {
+                showNotification("Simulated traffic analyser is now active!", "✅");
+            }, 1500);
+        }
+    </script>
+</body>
+</html>

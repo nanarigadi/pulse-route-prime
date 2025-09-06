@@ -11,12 +11,14 @@ const Index = () => {
       {/* Main Content */}
       <div className="flex-1 flex overflow-hidden">
         {/* Map Section */}
-        <div className="flex-1 p-4">
+        <div className="flex-1 pl-4 pr-2 py-4">
           <MapSection />
         </div>
         
         {/* Analytics Panel */}
-        <AnalyticsPanel />
+        <div className="w-72">
+          <AnalyticsPanel />
+        </div>
       </div>
     </div>
   );

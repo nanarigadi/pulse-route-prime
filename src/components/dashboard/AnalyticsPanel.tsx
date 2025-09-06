@@ -47,7 +47,7 @@ const analyticsData = [
 
 export function AnalyticsPanel() {
   return (
-    <div className="w-80 space-y-4 p-4">
+    <div className="w-72 space-y-4 p-4 h-full overflow-y-auto">
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-semibold text-foreground">Analytics</h2>
         <Badge variant="secondary" className="text-xs">
@@ -55,7 +55,7 @@ export function AnalyticsPanel() {
         </Badge>
       </div>
       
-      <div className="space-y-3">
+      <div className="space-y-3 pb-4">
         {analyticsData.map((item, index) => {
           const Icon = item.icon;
           

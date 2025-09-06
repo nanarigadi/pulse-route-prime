@@ -45,6 +45,7 @@ const Camera = () => {
   const nodesLayerRef = useRef<L.LayerGroup | null>(null);
   const circleRef = useRef<L.Circle | null>(null);
 
+  // Check for selected region data from localStorage
   useEffect(() => {
     const storedRegion = localStorage.getItem('selectedRegion');
     if (storedRegion) {
@@ -53,6 +54,7 @@ const Camera = () => {
     }
   }, []);
 
+  // Initialize map when region is selected
   useEffect(() => {
     let unsubscribe: (() => void) | null = null;
     
@@ -98,7 +100,7 @@ const Camera = () => {
     });
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: 'OpenStreetMap contributors'
+      attribution: '© OpenStreetMap contributors'
     }).addTo(map);
 
     map.createPane('circlePane');
@@ -197,6 +199,7 @@ const Camera = () => {
     }
   };
 
+  // Expanded view component
   const ExpandedView = () => {
     const expandedMapRef = useRef<HTMLDivElement>(null);
     const expandedMapInstanceRef = useRef<L.Map | null>(null);
@@ -225,7 +228,7 @@ const Camera = () => {
         });
 
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-          attribution: 'OpenStreetMap contributors'
+          attribution: '© OpenStreetMap contributors'
         }).addTo(map);
 
         map.createPane('circlePane');
@@ -673,10 +676,9 @@ const Camera = () => {
               </CardHeader>
               
               <CardContent className="pt-0 pb-3 flex-1 flex flex-col">
-                <div className="relative flex-1 bg-gray-900 rounded-md mb-3 overflow-hidden flex items-center justify-center">
-                  <div className="text-center text-white/30">
-                    <MapPin className="h-8 w-8 mx-auto mb-2" />
-                    <p className="text-sm">No Region</p>
+                <div className="relative flex-1 bg-black rounded-md mb-3 overflow-hidden">
+                  <div className="w-full h-full bg-gradient-to-br from-gray-800 to-gray-900 flex items-center justify-center">
+                    <p className="text-white/50 text-sm">Double-click on main map to select region</p>
                   </div>
                 </div>
 
@@ -684,7 +686,7 @@ const Camera = () => {
                   <div className="flex items-center justify-between text-sm">
                     <div className="flex items-center gap-1">
                       <AlertTriangle className="h-3 w-3 text-gray-500" />
-                      <span className="text-gray-500">-</span>
+                      <span className="text-gray-500">No Data</span>
                     </div>
                     <div className="flex items-center gap-1">
                       <Car className="h-3 w-3 text-muted-foreground" />
@@ -693,7 +695,7 @@ const Camera = () => {
                   </div>
                   
                   <div className="flex items-center justify-between text-xs text-muted-foreground">
-                    <span>Double-click map</span>
+                    <span>No region selected</span>
                     <Badge variant="secondary" className="text-xs px-2 py-1">
                       Inactive
                     </Badge>
@@ -703,42 +705,97 @@ const Camera = () => {
             </Card>
           )}
 
-          {[...Array(2)].map((_, i) => (
-            <Card key={i} className="bg-gradient-card border-border/50 backdrop-blur-glass opacity-30 aspect-square flex flex-col">
-              <CardHeader className="pb-2 flex-shrink-0">
-                <CardTitle className="flex items-center justify-between text-sm">
-                  <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 rounded-full bg-gray-600" />
-                    <span className="font-medium">Camera {i + 2}</span>
+          <Card className="bg-gradient-card border-border/50 backdrop-blur-glass opacity-50 aspect-square flex flex-col">
+            <CardHeader className="pb-2 flex-shrink-0">
+              <CardTitle className="flex items-center justify-between text-sm">
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full bg-gray-500" />
+                  <span className="font-medium">Camera 2</span>
+                </div>
+                <Badge variant="secondary" className="text-xs px-2 py-1">
+                  Offline
+                </Badge>
+              </CardTitle>
+              <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                <MapPin className="h-3 w-3" />
+                <span>Coming Soon</span>
+              </div>
+            </CardHeader>
+            
+            <CardContent className="pt-0 pb-3 flex-1 flex flex-col">
+              <div className="relative flex-1 bg-black rounded-md mb-3 overflow-hidden">
+                <div className="w-full h-full bg-gradient-to-br from-gray-800 to-gray-900 flex items-center justify-center">
+                  <p className="text-white/50 text-sm">Camera Offline</p>
+                </div>
+              </div>
+
+              <div className="space-y-1 flex-shrink-0">
+                <div className="flex items-center justify-between text-sm">
+                  <div className="flex items-center gap-1">
+                    <AlertTriangle className="h-3 w-3 text-gray-500" />
+                    <span className="text-gray-500">Offline</span>
                   </div>
+                  <div className="flex items-center gap-1">
+                    <Car className="h-3 w-3 text-muted-foreground" />
+                    <span className="text-foreground">0</span>
+                  </div>
+                </div>
+                
+                <div className="flex items-center justify-between text-xs text-muted-foreground">
+                  <span>No connection</span>
                   <Badge variant="secondary" className="text-xs px-2 py-1">
                     Offline
                   </Badge>
-                </CardTitle>
-                <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                  <MapPin className="h-3 w-3" />
-                  <span>Not available</span>
                 </div>
-              </CardHeader>
-              
-              <CardContent className="pt-0 pb-3 flex-1 flex flex-col">
-                <div className="relative flex-1 bg-gray-800 rounded-md mb-3 overflow-hidden flex items-center justify-center">
-                  <div className="text-center text-white/20">
-                    <div className="h-8 w-8 mx-auto mb-2 bg-gray-600 rounded" />
-                    <p className="text-sm">Offline</p>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-gradient-card border-border/50 backdrop-blur-glass opacity-50 aspect-square flex flex-col">
+            <CardHeader className="pb-2 flex-shrink-0">
+              <CardTitle className="flex items-center justify-between text-sm">
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full bg-gray-500" />
+                  <span className="font-medium">Camera 3</span>
+                </div>
+                <Badge variant="secondary" className="text-xs px-2 py-1">
+                  Offline
+                </Badge>
+              </CardTitle>
+              <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                <MapPin className="h-3 w-3" />
+                <span>Coming Soon</span>
+              </div>
+            </CardHeader>
+            
+            <CardContent className="pt-0 pb-3 flex-1 flex flex-col">
+              <div className="relative flex-1 bg-black rounded-md mb-3 overflow-hidden">
+                <div className="w-full h-full bg-gradient-to-br from-gray-800 to-gray-900 flex items-center justify-center">
+                  <p className="text-white/50 text-sm">Camera Offline</p>
+                </div>
+              </div>
+
+              <div className="space-y-1 flex-shrink-0">
+                <div className="flex items-center justify-between text-sm">
+                  <div className="flex items-center gap-1">
+                    <AlertTriangle className="h-3 w-3 text-gray-500" />
+                    <span className="text-gray-500">Offline</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Car className="h-3 w-3 text-muted-foreground" />
+                    <span className="text-foreground">0</span>
                   </div>
                 </div>
-                <div className="space-y-1 flex-shrink-0">
-                  <div className="flex items-center justify-between text-sm text-gray-500">
-                    <span>Status: Offline</span>
-                    <Badge variant="secondary" className="text-xs px-2 py-1">
-                      N/A
-                    </Badge>
-                  </div>
+                
+                <div className="flex items-center justify-between text-xs text-muted-foreground">
+                  <span>No connection</span>
+                  <Badge variant="secondary" className="text-xs px-2 py-1">
+                    Offline
+                  </Badge>
                 </div>
-              </CardContent>
-            </Card>
-          ))}
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </div>
     </div>
