@@ -10,12 +10,12 @@ const Index = () => {
       
       {/* Main Content */}
       <div className="flex-1 flex overflow-hidden">
-        {/* Map Section */}
+        {/* Map Section - Expanded to match analytics panel height */}
         <div className="flex-1 pl-4 pr-2 py-4">
           <MapSection />
         </div>
         
-        {/* Analytics Panel */}
+        {/* Analytics Panel - Fixed width, full height */}
         <div className="w-72">
           <AnalyticsPanel />
         </div>
