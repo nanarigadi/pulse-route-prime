@@ -9,7 +9,13 @@ import { Button } from "@/components/ui/button";
 // Fix Leaflet marker icon issue in React
 import iconUrl from "leaflet/dist/images/marker-icon.png";
 import iconShadow from "leaflet/dist/images/marker-shadow.png";
-const DefaultIcon = L.icon({ iconUrl, shadowUrl: iconShadow });
+const DefaultIcon = L.icon({
+  iconUrl,
+  shadowUrl: iconShadow,
+  iconSize: [25, 41],
+  iconAnchor: [12.5, 41], // ✅ Fix for pinpoint accuracy
+  popupAnchor: [0, -41],
+});
 L.Marker.prototype.options.icon = DefaultIcon;
 
 // OpenWeatherMap API key
@@ -73,7 +79,7 @@ const WeatherMap = () => {
   return (
     <div className="relative h-full w-full">
       {/* Toggle Controls */}
-      <div className="absolute top-4 right-4 z-[1000] bg-white/80 p-2 rounded shadow space-x-2">
+      <div className="absolute top-4 right-4 z-[1000] bg-white/80 p-2 rounded shadow space-x-2"> {/* ✅ Moved controls to the right */}
         <Button
           variant={overlay === "rain" ? "default" : "outline"}
           size="sm"
