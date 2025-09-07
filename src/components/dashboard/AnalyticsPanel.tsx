@@ -34,72 +34,92 @@ const analyticsData = [
     icon: Cloud,
     trend: "down",
     color: "warning"
-  },
-  {
-    title: "Event Predictions",
-    value: "Low",
-    subtitle: "in next 24h",
-    icon: AlertTriangle,
-    trend: "stable",
-    color: "info"
   }
 ];
 
 export function AnalyticsPanel() {
   return (
-    <div className="w-72 space-y-4 p-4 h-full overflow-y-auto">
-      <div className="flex items-center justify-between">
+    <div className="w-72 p-3 h-full flex flex-col">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-2">
         <h2 className="text-xl font-semibold text-foreground">Analytics</h2>
         <Badge variant="secondary" className="text-xs">
           Real-time
         </Badge>
       </div>
-      
-      <div className="space-y-3 pb-4">
+
+      {/* Equal-height cards filling available space */}
+      <div className="grid grid-rows-4 gap-3 flex-1">
         {analyticsData.map((item, index) => {
           const Icon = item.icon;
-          
+
           return (
-            <Card key={index} className="bg-gradient-card border-border/50 backdrop-blur-glass">
-              <CardHeader className="pb-3">
-                <CardTitle className="flex items-center justify-between text-sm font-medium">
+            <Card
+              key={index}
+              className="bg-gradient-card border border-border/50 backdrop-blur-glass flex flex-col"
+            >
+              <CardHeader className="py-2 px-3">
+                <CardTitle className="flex items-center justify-between text-[13px] font-medium">
                   <span className="text-muted-foreground">{item.title}</span>
-                  <Icon className={`h-4 w-4 ${
-                    item.color === 'success' ? 'text-success' :
-                    item.color === 'warning' ? 'text-warning' :
-                    item.color === 'info' ? 'text-info' : 'text-muted-foreground'
-                  }`} />
+                  <Icon
+                    className={`h-4 w-4 ${
+                      item.color === "success"
+                        ? "text-success"
+                        : item.color === "warning"
+                        ? "text-warning"
+                        : item.color === "info"
+                        ? "text-info"
+                        : "text-muted-foreground"
+                    }`}
+                  />
                 </CardTitle>
               </CardHeader>
-              <CardContent className="pt-0">
+              <CardContent className="pt-0 px-3 pb-3 flex-1 flex flex-col justify-end">
                 <div className="flex items-end justify-between">
                   <div>
-                    <div className={`text-2xl font-bold ${
-                      item.color === 'success' ? 'text-success' :
-                      item.color === 'warning' ? 'text-warning' :
-                      item.color === 'info' ? 'text-info' : 'text-foreground'
-                    }`}>
+                    <div
+                      className={`text-xl font-bold ${
+                        item.color === "success"
+                          ? "text-success"
+                          : item.color === "warning"
+                          ? "text-warning"
+                          : item.color === "info"
+                          ? "text-info"
+                          : "text-foreground"
+                      }`}
+                    >
                       {item.value}
                     </div>
-                    <div className="text-xs text-muted-foreground">
+                    <div className="text-[11px] text-muted-foreground">
                       {item.subtitle}
                     </div>
                   </div>
                   <div className="flex items-center gap-1">
-                    {item.trend === 'up' && (
+                    {item.trend === "up" && (
                       <TrendingUp className="h-3 w-3 text-success" />
                     )}
-                    {item.trend === 'down' && (
-                      <TrendingDown className={`h-3 w-3 ${
-                        item.title.includes('CO₂') ? 'text-success' : 'text-destructive'
-                      }`} />
+                    {item.trend === "down" && (
+                      <TrendingDown
+                        className={`h-3 w-3 ${
+                          item.title.includes("CO₂")
+                            ? "text-success"
+                            : "text-destructive"
+                        }`}
+                      />
                     )}
-                    <span className={`text-xs ${
-                      item.trend === 'up' ? 'text-success' :
-                      item.trend === 'down' && item.title.includes('CO₂') ? 'text-success' :
-                      item.trend === 'down' ? 'text-destructive' : 'text-muted-foreground'
-                    }`}>
-                      {item.trend === 'stable' ? '—' : item.subtitle}
+                    <span
+                      className={`text-[11px] ${
+                        item.trend === "up"
+                          ? "text-success"
+                          : item.trend === "down" &&
+                            item.title.includes("CO₂")
+                          ? "text-success"
+                          : item.trend === "down"
+                          ? "text-destructive"
+                          : "text-muted-foreground"
+                      }`}
+                    >
+                      {item.trend === "stable" ? "—" : item.subtitle}
                     </span>
                   </div>
                 </div>

@@ -1,3 +1,4 @@
+import React, { useEffect, useState } from "react";
 import { Sidebar } from "@/components/dashboard/Sidebar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -11,10 +12,10 @@ import {
   ResponsiveContainer,
   BarChart,
   Bar,
-  Legend
+  Legend,
 } from "recharts";
 
-// Generate a 30-day fake dataset comparing systems city-wide
+// Generate a 30-day fake dataset comparing systems across Bhubaneswar
 const days = Array.from({ length: 30 }, (_, i) => i + 1);
 const monthlyData = days.map((d) => {
   // Baselines and effects fluctuate mildly over the month
@@ -22,10 +23,10 @@ const monthlyData = days.map((d) => {
   const withCommuteReductionPct = 8 + Math.sin((d + 2) / 3) * 2; // 6-10%
 
   const fuelWithoutKL = 52 + Math.cos(d / 4) * 3; // around 49-55 kL
-  const fuelWithKL = fuelWithoutKL * 0.9 + (Math.sin(d / 5) * 0.5); // ~10% less on avg
+  const fuelWithKL = fuelWithoutKL * 0.9 + Math.sin(d / 5) * 0.5; // ~10% less on avg
 
   const co2WithoutTons = 130 + Math.sin(d / 6) * 6; // around 124-136 tons
-  const co2WithTons = co2WithoutTons * 0.9 + (Math.cos(d / 5) * 1.2); // ~10% less on avg
+  const co2WithTons = co2WithoutTons * 0.9 + Math.cos(d / 5) * 1.2; // ~10% less on avg
 
   return {
     day: d,
@@ -37,7 +38,7 @@ const monthlyData = days.map((d) => {
     fuelBaseline: Number(fuelWithoutKL.toFixed(1)),
     fuelDelta: Number((fuelWithKL - fuelWithoutKL).toFixed(1)),
     co2With: Number(co2WithTons.toFixed(1)),
-    co2Without: Number(co2WithoutTons.toFixed(1))
+    co2Without: Number(co2WithoutTons.toFixed(1)),
   };
 });
 
@@ -45,20 +46,19 @@ const monthlyData = days.map((d) => {
 const weatherImpact = [
   { label: "Low", withWebsite: 10.2, withoutWebsite: 3.1 },
   { label: "Moderate", withWebsite: 8.4, withoutWebsite: 2.6 },
-  { label: "High", withWebsite: 6.1, withoutWebsite: 1.9 }
+  { label: "High", withWebsite: 6.1, withoutWebsite: 1.9 },
 ];
 
 const chartGridClass = "bg-gradient-card border border-border/50 backdrop-blur-glass";
 
-// Static city zone impact data for table
-
+// Static Bhubaneswar zone impact data for table
 const zoneMetrics = [
-  { zone: "Downtown Core", commuteReductionPct: 11.2, fuelSavedKL: 6.3, co2SavedTons: 14.1, weatherEfficiencyPct: 9.8 },
-  { zone: "North District", commuteReductionPct: 8.1, fuelSavedKL: 4.2, co2SavedTons: 9.6, weatherEfficiencyPct: 7.4 },
-  { zone: "East Industrial", commuteReductionPct: 5.3, fuelSavedKL: 2.8, co2SavedTons: 6.1, weatherEfficiencyPct: 4.3 },
-  { zone: "University Belt", commuteReductionPct: 10.5, fuelSavedKL: 5.7, co2SavedTons: 12.9, weatherEfficiencyPct: 8.7 },
-  { zone: "West Suburbs", commuteReductionPct: 7.6, fuelSavedKL: 3.9, co2SavedTons: 8.4, weatherEfficiencyPct: 6.8 },
-  { zone: "South Waterfront", commuteReductionPct: 9.9, fuelSavedKL: 5.1, co2SavedTons: 11.7, weatherEfficiencyPct: 8.2 }
+  { zone: "Jayadev Vihar", commuteReductionPct: 11.2, fuelSavedKL: 6.3, co2SavedTons: 14.1, weatherEfficiencyPct: 9.8 },
+  { zone: "Chandrasekharpur", commuteReductionPct: 8.1, fuelSavedKL: 4.2, co2SavedTons: 9.6, weatherEfficiencyPct: 7.4 },
+  { zone: "Patia", commuteReductionPct: 5.3, fuelSavedKL: 2.8, co2SavedTons: 6.1, weatherEfficiencyPct: 4.3 },
+  { zone: "Khandagiri", commuteReductionPct: 10.5, fuelSavedKL: 5.7, co2SavedTons: 12.9, weatherEfficiencyPct: 8.7 },
+  { zone: "Saheed Nagar", commuteReductionPct: 7.6, fuelSavedKL: 3.9, co2SavedTons: 8.4, weatherEfficiencyPct: 6.8 },
+  { zone: "Bhubaneswar IT Hub", commuteReductionPct: 9.9, fuelSavedKL: 5.1, co2SavedTons: 11.7, weatherEfficiencyPct: 8.2 },
 ];
 
 // Compact tooltip component and shared styles
@@ -99,21 +99,43 @@ function CompactTooltip({ active, payload, label }: { active?: boolean; payload?
   );
 }
 
+// Wrapper that adds a small lag before showing CompactTooltip
+function DelayedTooltip(props: any) {
+  const { active } = props;
+  const [show, setShow] = useState(false);
+
+  useEffect(() => {
+    let timer: ReturnType<typeof setTimeout>;
+
+    if (active) {
+      // wait 150ms before showing
+      timer = setTimeout(() => setShow(true), 150);
+    } else {
+      setShow(false); // hide instantly
+    }
+
+    return () => clearTimeout(timer);
+  }, [active]);
+
+  if (!show) return null;
+  return <CompactTooltip {...props} />;
+}
+
 const Analytics = () => {
   return (
     <div className="h-screen flex bg-background overflow-hidden">
       <Sidebar />
       <div className="flex-1 p-4 space-y-6">
         <div>
-          <h1 className="text-xl font-bold">City-wide Analytics</h1>
-          <p className="text-xs text-muted-foreground">One-month comparison: AI-based system (With Website) vs Orthodox system (Without Website)</p>
+          <h1 className="text-xl font-bold">Bhubaneswar City-wide Analytics</h1>
+          <p className="text-xs text-muted-foreground">One-month comparison: AI-based system (With Website) vs Orthodox system (Without Website) across Bhubaneswar, Odisha</p>
         </div>
 
         {/* Charts in 2x2 matrix layout */}
         <div className="grid grid-cols-2 gap-4">
           <Card className={chartGridClass}>
             <CardHeader className="py-2 px-3">
-              <CardTitle className="text-xs">Commute Time Reduction (%) — With vs Without</CardTitle>
+              <CardTitle className="text-xs">Bhubaneswar Commute Time Reduction (%) — With vs Without</CardTitle>
             </CardHeader>
             <CardContent className="pt-0 px-3 pb-2">
               <div className="h-48">
@@ -122,10 +144,10 @@ const Analytics = () => {
                     <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
                     <XAxis dataKey="day" stroke="currentColor" className="text-[10px] fill-muted-foreground" />
                     <YAxis unit="%" stroke="currentColor" className="text-[10px] fill-muted-foreground" />
-                    <Tooltip content={<CompactTooltip />} isAnimationActive={true} />
+                    <Tooltip content={DelayedTooltip} isAnimationActive={false} />
                     <Legend wrapperStyle={{ fontSize: 10 }} />
-                    <Line type="monotone" name="With Nanarigadi" dataKey="commuteReductionWith" stroke="hsl(var(--primary))" strokeWidth={1.5} dot={false} />
-                    <Line type="monotone" name="Without Nanarigadi" dataKey="commuteReductionWithout" stroke="hsl(var(--muted-foreground))" strokeDasharray="4 4" strokeWidth={1.5} dot={false} />
+                    <Line type="monotone" name="With Nanarigadi (Bhubaneswar)" dataKey="commuteReductionWith" stroke="hsl(var(--primary))" strokeWidth={1.5} dot={false} />
+                    <Line type="monotone" name="Without Nanarigadi (Bhubaneswar)" dataKey="commuteReductionWithout" stroke="hsl(var(--muted-foreground))" strokeDasharray="4 4" strokeWidth={1.5} dot={false} />
                   </LineChart>
                 </ResponsiveContainer>
               </div>
@@ -134,7 +156,7 @@ const Analytics = () => {
 
           <Card className={chartGridClass}>
             <CardHeader className="py-2 px-3">
-              <CardTitle className="text-xs">Fuel Consumption (kL) — Waterfall by Day</CardTitle>
+              <CardTitle className="text-xs">Bhubaneswar Fuel Consumption (kL) — Waterfall by Day</CardTitle>
             </CardHeader>
             <CardContent className="pt-0 px-3 pb-2">
               <div className="h-48">
@@ -143,9 +165,9 @@ const Analytics = () => {
                     <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
                     <XAxis dataKey="day" stroke="currentColor" className="text-[10px] fill-muted-foreground" />
                     <YAxis unit=" kL" stroke="currentColor" className="text-[10px] fill-muted-foreground" />
-                    <Tooltip content={<CompactTooltip />} isAnimationActive={true} />
+                    <Tooltip content={DelayedTooltip} isAnimationActive={false} />
                     <Legend wrapperStyle={{ fontSize: 10 }} />
-                    <Bar name="Without Nanarigadi" dataKey="fuelBaseline" stackId="a" fill="hsl(var(--muted-foreground))" radius={[3, 3, 0, 0]} />
+                    <Bar name="Without Nanarigadi (Bhubaneswar)" dataKey="fuelBaseline" stackId="a" fill="hsl(var(--muted-foreground))" radius={[3, 3, 0, 0]} />
                     <Bar name="Delta (With - Without)" dataKey="fuelDelta" stackId="a" fill="hsl(var(--success))" />
                   </BarChart>
                 </ResponsiveContainer>
@@ -155,7 +177,7 @@ const Analytics = () => {
 
           <Card className={chartGridClass}>
             <CardHeader className="py-2 px-3">
-              <CardTitle className="text-xs">CO₂ Emissions (tons) — With vs Without</CardTitle>
+              <CardTitle className="text-xs">Bhubaneswar CO₂ Emissions (tons) — With vs Without</CardTitle>
             </CardHeader>
             <CardContent className="pt-0 px-3 pb-2">
               <div className="h-48">
@@ -164,10 +186,10 @@ const Analytics = () => {
                     <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
                     <XAxis dataKey="day" stroke="currentColor" className="text-[10px] fill-muted-foreground" />
                     <YAxis unit=" t" stroke="currentColor" className="text-[10px] fill-muted-foreground" />
-                    <Tooltip content={<CompactTooltip />} isAnimationActive={true} />
+                    <Tooltip content={DelayedTooltip} isAnimationActive={false} />
                     <Legend wrapperStyle={{ fontSize: 10 }} />
-                    <Line type="monotone" name="With Nanarigadi" dataKey="co2With" stroke="hsl(var(--primary))" strokeWidth={1.5} dot={false} />
-                    <Line type="monotone" name="Without Nanarigadi" dataKey="co2Without" stroke="hsl(var(--destructive))" strokeDasharray="4 4" strokeWidth={1.5} dot={false} />
+                    <Line type="monotone" name="With Nanarigadi (Bhubaneswar)" dataKey="co2With" stroke="hsl(var(--primary))" strokeWidth={1.5} dot={false} />
+                    <Line type="monotone" name="Without Nanarigadi (Bhubaneswar)" dataKey="co2Without" stroke="hsl(var(--destructive))" strokeDasharray="4 4" strokeWidth={1.5} dot={false} />
                   </LineChart>
                 </ResponsiveContainer>
               </div>
@@ -176,7 +198,7 @@ const Analytics = () => {
 
           <Card className={chartGridClass}>
             <CardHeader className="py-2 px-3">
-              <CardTitle className="text-xs">Weather Impact — Avg Commute Time Reduction (%)</CardTitle>
+              <CardTitle className="text-xs">Bhubaneswar Weather Impact — Avg Commute Time Reduction (%)</CardTitle>
             </CardHeader>
             <CardContent className="pt-0 px-3 pb-2">
               <div className="h-48">
@@ -185,10 +207,10 @@ const Analytics = () => {
                     <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
                     <XAxis dataKey="label" stroke="currentColor" className="text-[10px] fill-muted-foreground" />
                     <YAxis unit="%" stroke="currentColor" className="text-[10px] fill-muted-foreground" />
-                    <Tooltip content={<CompactTooltip />} isAnimationActive={true} />
+                    <Tooltip content={DelayedTooltip} isAnimationActive={false} />
                     <Legend wrapperStyle={{ fontSize: 10 }} />
-                    <Bar name="With Nanarigadi" dataKey="withWebsite" fill="hsl(var(--primary))" radius={[3, 3, 0, 0]} />
-                    <Bar name="Without Nanarigadi" dataKey="withoutWebsite" fill="hsl(var(--muted-foreground))" radius={[3, 3, 0, 0]} />
+                    <Bar name="With Nanarigadi (Bhubaneswar)" dataKey="withWebsite" fill="hsl(var(--primary))" radius={[3, 3, 0, 0]} />
+                    <Bar name="Without Nanarigadi (Bhubaneswar)" dataKey="withoutWebsite" fill="hsl(var(--muted-foreground))" radius={[3, 3, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
@@ -199,7 +221,7 @@ const Analytics = () => {
         {/* Zone-wise Comparison Table (with proper spacing) */}
         <Card className={chartGridClass}>
           <CardHeader className="py-2 px-3">
-            <CardTitle className="text-xs">Zone-wise Impact Comparison</CardTitle>
+            <CardTitle className="text-xs">Bhubaneswar Zone-wise Impact Comparison</CardTitle>
           </CardHeader>
           <CardContent className="pt-0 px-2 pb-2 overflow-x-auto">
             <Table className="text-[11px] min-w-[720px]">
@@ -232,3 +254,5 @@ const Analytics = () => {
 };
 
 export default Analytics;
+
+ 
