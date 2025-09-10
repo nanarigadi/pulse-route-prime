@@ -1,73 +1,278 @@
-# Welcome to your Lovable project
+# गतिFlow - AI-based Traffic Management System
 
-## Project info
+<div align="center">
+  <img src="public/logo.png" alt="गतिFlow Logo" width="200" height="200">
+  
+  **गतिFlow** - Advanced AI-powered traffic management dashboard for smart cities
+  
+  [![React](https://img.shields.io/badge/React-18.0+-blue.svg)](https://reactjs.org/)
+  [![TypeScript](https://img.shields.io/badge/TypeScript-5.0+-blue.svg)](https://www.typescriptlang.org/)
+  [![Vite](https://img.shields.io/badge/Vite-5.0+-purple.svg)](https://vitejs.dev/)
+  [![Tailwind CSS](https://img.shields.io/badge/Tailwind%20CSS-3.0+-teal.svg)](https://tailwindcss.com/)
+  [![Leaflet](https://img.shields.io/badge/Leaflet-1.9+-green.svg)](https://leafletjs.com/)
+</div>
 
-**URL**: https://lovable.dev/projects/76953877-c496-4dd8-ab24-e4f4d15c6e75
+## 🚀 Overview
 
-## How can I edit this code?
+गतिFlow is a comprehensive AI-based traffic management system designed for smart cities. It provides real-time traffic monitoring, predictive analytics, emergency response coordination, and intelligent traffic signal control through an intuitive web-based dashboard.
 
-There are several ways of editing your application.
+## ✨ Key Features
 
-**Use Lovable**
+### 🗺️ **Live Traffic Monitoring**
+- **Real-time Map Integration**: Interactive Leaflet.js maps with live traffic data
+- **Traffic Node Visualization**: Dynamic traffic congestion indicators with severity levels
+- **Region Selection**: Click-to-select monitoring areas with 1km radius coverage
+- **Traffic Analytics**: Real-time vehicle count, traffic levels, and congestion patterns
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/76953877-c496-4dd8-ab24-e4f4d15c6e75) and start prompting.
+### 📹 **Live Camera Feed System**
+- **Multi-Camera Support**: Up to 2 simultaneous camera feeds
+- **Video Management**: Intelligent video assignment and playback
+- **Expandable Views**: Popup modals for detailed camera monitoring
+- **Live Feed Controls**: Dynamic video allocation across intersections
 
-Changes made via Lovable will be committed automatically to this repo.
+### 🚦 **Smart Traffic Signal Control**
+- **Intersection Management**: Control 4 traffic intersections simultaneously
+- **Signal Override**: Manual control for RED, GREEN, and YELLOW signals
+- **Confirmation System**: Safety popups for signal changes
+- **Auto-Randomization**: Automatic signal changes every 30-60 seconds
 
-**Use your preferred IDE**
+### 📊 **Analytics Dashboard**
+- **Real-time Metrics**: Live traffic statistics and performance indicators
+- **Traffic Trends**: Historical data visualization and pattern analysis
+- **Performance Monitoring**: System health and traffic flow optimization
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+### 🌤️ **Weather Integration**
+- **Weather Monitoring**: Real-time weather data integration
+- **Traffic Impact Analysis**: Weather-based traffic pattern predictions
+- **Congestion Alerts**: Weather-related traffic disruption notifications
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+### 🚨 **Emergency Response**
+- **Emergency Coordination**: Rapid response system for traffic incidents
+- **Alert Management**: Real-time emergency notifications and updates
+- **Traffic Diversion**: Emergency route management and traffic redirection
 
-Follow these steps:
+### 📅 **Event Management**
+- **Event Horizon**: Special event traffic management
+- **Traffic Predictions**: Event-based traffic flow forecasting
+- **Route Optimization**: Dynamic routing for special events
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+## 🛠️ Technology Stack
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+### **Frontend**
+- **React 18+** - Modern UI framework with hooks and functional components
+- **TypeScript** - Type-safe development with enhanced IDE support
+- **Vite** - Lightning-fast build tool and development server
+- **Tailwind CSS** - Utility-first CSS framework for rapid UI development
 
-# Step 3: Install the necessary dependencies.
-npm i
+### **UI Components**
+- **Shadcn/ui** - Modern, accessible component library
+- **Lucide React** - Beautiful, customizable icons
+- **Radix UI** - Unstyled, accessible UI primitives
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
+### **Maps & Visualization**
+- **Leaflet.js** - Interactive maps with custom markers and layers
+- **OpenStreetMap** - Free, open-source map tiles
+- **Custom Traffic Nodes** - Dynamic traffic visualization system
+
+### **State Management**
+- **React Context** - Global state management for video feeds
+- **Local Storage** - Persistent user preferences and map state
+- **Custom Hooks** - Reusable state logic and side effects
+
+### **Development Tools**
+- **ESLint** - Code linting and quality assurance
+- **PostCSS** - CSS processing and optimization
+- **TypeScript Compiler** - Static type checking
+
+## 🚀 Getting Started
+
+### Prerequisites
+- **Node.js** (v18.0 or higher)
+- **npm** or **yarn** package manager
+- **Git** for version control
+
+### Installation
+
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/nanarigadi/pulse-route-prime.git
+   cd pulse-route-prime
+   ```
+
+2. **Install dependencies**
+   ```bash
+   npm install
+   # or
+   yarn install
+   ```
+
+3. **Start the development server**
+   ```bash
+   npm run dev
+   # or
+   yarn dev
+   ```
+
+4. **Open your browser**
+   Navigate to `http://localhost:5173` (or the port shown in terminal)
+
+### Build for Production
+
+```bash
+npm run build
+# or
+yarn build
 ```
 
-**Edit a file directly in GitHub**
+The built files will be in the `dist` directory, ready for deployment.
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+## 📁 Project Structure
 
-**Use GitHub Codespaces**
+```
+pulse-route-prime/
+├── public/                 # Static assets
+│   ├── logo.png           # गतिFlow logo
+│   ├── favicon.png        # Browser favicon
+│   └── videos/            # Sample video files
+├── src/
+│   ├── components/        # Reusable UI components
+│   │   ├── dashboard/     # Dashboard-specific components
+│   │   │   ├── Sidebar.tsx
+│   │   │   ├── TrafficMap.tsx
+│   │   │   ├── AnalyticsPanel.tsx
+│   │   │   └── TrafficNotifications.tsx
+│   │   ├── events/        # Event management components
+│   │   ├── weather/       # Weather-related components
+│   │   └── ui/           # Base UI components (Shadcn/ui)
+│   ├── hooks/            # Custom React hooks
+│   │   ├── useVideoState.tsx
+│   │   └── use-mobile.tsx
+│   ├── lib/              # Utility libraries
+│   │   ├── trafficNodeService.ts
+│   │   └── utils.ts
+│   ├── pages/            # Main application pages
+│   │   ├── Index.tsx     # Live Map
+│   │   ├── Analytics.tsx # Analytics Dashboard
+│   │   ├── Camera.tsx    # Live Camera Feed
+│   │   ├── Emergency.tsx # Emergency Response
+│   │   ├── Weather.tsx   # Weather Monitoring
+│   │   └── Events.tsx    # Event Management
+│   ├── App.tsx           # Main application component
+│   └── main.tsx          # Application entry point
+├── package.json          # Dependencies and scripts
+├── tailwind.config.ts    # Tailwind CSS configuration
+├── vite.config.ts        # Vite configuration
+└── README.md            # This file
+```
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+## 🎯 Core Features Deep Dive
 
-## What technologies are used for this project?
+### **Live Camera Feed System**
+- **Smart Video Assignment**: Automatically assigns unique videos to intersections
+- **Camera Prioritization**: Intelligent camera feed management (Camera 1 → Camera 2 → Overwrite)
+- **Popup Expansion**: Modal-based expanded views for detailed monitoring
+- **Video Controls**: Play, pause, and loop functionality
 
-This project is built with:
+### **Traffic Signal Management**
+- **Four Intersection Control**: Manage multiple intersections simultaneously
+- **Signal Override**: Manual control with confirmation dialogs
+- **Auto-Randomization**: Automatic signal changes for realistic simulation
+- **Status Visualization**: Color-coded status indicators (RED/GREEN/YELLOW)
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+### **Interactive Map System**
+- **Region Selection**: Double-click to select monitoring areas
+- **Traffic Node Visualization**: Dynamic congestion indicators
+- **Zoom Controls**: In/out zoom with bounds restrictions
+- **State Persistence**: Remembers map position and zoom level
 
-## How can I deploy this project?
+### **Responsive Design**
+- **Mobile-First**: Optimized for all device sizes
+- **Adaptive Layout**: Responsive grid system
+- **Touch-Friendly**: Mobile-optimized interactions
+- **Accessibility**: WCAG compliant components
 
-Simply open [Lovable](https://lovable.dev/projects/76953877-c496-4dd8-ab24-e4f4d15c6e75) and click on Share -> Publish.
+## 🔧 Configuration
 
-## Can I connect a custom domain to my Lovable project?
+### **Environment Variables**
+Create a `.env` file in the root directory:
 
-Yes, you can!
+```env
+VITE_API_URL=your_api_url_here
+VITE_MAP_TILE_URL=your_map_tile_url_here
+```
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+### **Customization**
+- **Branding**: Update `public/logo.png` and `public/favicon.png`
+- **Colors**: Modify `tailwind.config.ts` for custom color schemes
+- **Components**: Customize Shadcn/ui components in `src/components/ui/`
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+## 🚀 Deployment
+
+### **Vercel (Recommended)**
+1. Connect your GitHub repository to Vercel
+2. Configure build settings:
+   - Build Command: `npm run build`
+   - Output Directory: `dist`
+3. Deploy automatically on every push
+
+### **Netlify**
+1. Connect your GitHub repository to Netlify
+2. Set build command: `npm run build`
+3. Set publish directory: `dist`
+4. Deploy with automatic builds
+
+### **Traditional Hosting**
+1. Run `npm run build`
+2. Upload the `dist` folder to your web server
+3. Configure your server to serve the built files
+
+## 🤝 Contributing
+
+We welcome contributions to गतिFlow! Here's how you can help:
+
+1. **Fork the repository**
+2. **Create a feature branch**: `git checkout -b feature/amazing-feature`
+3. **Commit your changes**: `git commit -m 'Add amazing feature'`
+4. **Push to the branch**: `git push origin feature/amazing-feature`
+5. **Open a Pull Request**
+
+### **Development Guidelines**
+- Follow TypeScript best practices
+- Use meaningful commit messages
+- Test your changes thoroughly
+- Update documentation as needed
+- Follow the existing code style
+
+## 📝 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🙏 Acknowledgments
+
+- **OpenStreetMap** for providing free map tiles
+- **Leaflet.js** for the excellent mapping library
+- **Shadcn/ui** for the beautiful component library
+- **Vite** for the fast development experience
+- **React** team for the amazing framework
+
+## 📞 Support
+
+For support, email support@gatiflow.com or create an issue in the GitHub repository.
+
+## 🔮 Roadmap
+
+### **Upcoming Features**
+- [ ] **Machine Learning Integration**: AI-powered traffic prediction
+- [ ] **Mobile App**: Native mobile application
+- [ ] **API Integration**: Real traffic data APIs
+- [ ] **Multi-language Support**: Internationalization
+- [ ] **Advanced Analytics**: More detailed traffic insights
+- [ ] **IoT Integration**: Real sensor data integration
+- [ ] **Cloud Deployment**: Scalable cloud infrastructure
+
+---
+
+<div align="center">
+  <p>Built with ❤️ for smart cities</p>
+  <p><strong>गतिFlow</strong> - Making traffic management intelligent</p>
+</div>
