@@ -6,8 +6,7 @@ import {
   Cloud, 
   Calendar, 
   Camera, 
-  Settings,
-  Snowflake
+  Settings
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -24,15 +23,13 @@ const navigationItems = [
 export function Sidebar() {
   return (
     <div className="flex h-screen w-64 flex-col bg-gradient-card border-r border-border/50 backdrop-blur-glass">
-      {/* Logo & Brand */}
-      <div className="flex items-center gap-3 px-6 py-6 border-b border-border/50">
-        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-primary">
-          <Snowflake className="h-5 w-5 text-primary-foreground" />
-        </div>
-        <div>
-          <h1 className="text-xl font-bold text-foreground">CityFlow</h1>
-          <p className="text-xs text-muted-foreground">Smart Traffic Management</p>
-        </div>
+      {/* Logo Section - Full Width */}
+      <div className="w-full h-24 flex items-center justify-center border-b border-border/50">
+        <img 
+          src="/logo.png" 
+          alt="गतिFlow Logo" 
+          className="h-full w-full object-contain px-4" 
+        />
       </div>
 
       {/* Navigation */}

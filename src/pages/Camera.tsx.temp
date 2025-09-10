@@ -30,12 +30,6 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import {
   Select,
   SelectContent,
   SelectItem,
@@ -765,83 +759,6 @@ const Camera = () => {
           </div>
         </div>
       </div>
-
-      {/* Expanded View Dialogs */}
-      <Dialog open={expandedCard === 'selectedRegion'} onOpenChange={(open) => !open && setExpandedCard(null)}>
-        <DialogContent className="max-w-6xl h-[80vh] p-0">
-          <DialogHeader className="p-6 pb-0">
-            <DialogTitle>Selected Region - Expanded View</DialogTitle>
-          </DialogHeader>
-          <div className="flex-1 p-6 pt-0">
-            <div className="relative h-full bg-black rounded-md overflow-hidden">
-              <div className="w-full h-full bg-gradient-to-br from-gray-800 to-gray-900">
-                <div ref={mapRef} className="w-full h-full" />
-              </div>
-              
-              <div className="absolute inset-0 pointer-events-none z-20">
-                <div className="absolute bottom-3 left-3 pointer-events-auto">
-                  <Button
-                    size="sm"
-                    variant="secondary"
-                    className="h-9 w-9 p-0 bg-black/80 hover:bg-black/90 text-white shadow-xl border-2 border-white/30 backdrop-blur-sm"
-                    onClick={handleRefresh}
-                    title="Refresh traffic data"
-                  >
-                    <RefreshCw className="h-4 w-4" />
-                  </Button>
-                </div>
-                <div className="absolute bottom-3 right-3 pointer-events-auto">
-                  <div className="flex flex-col gap-1">
-                    <Button
-                      size="sm"
-                      variant="secondary"
-                      className="h-9 w-9 p-0 bg-black/80 hover:bg-black/90 text-white shadow-xl border-2 border-white/30 backdrop-blur-sm"
-                      onClick={handleZoomIn}
-                      title="Zoom in"
-                    >
-                      <Plus className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="secondary"
-                      className="h-9 w-9 p-0 bg-black/80 hover:bg-black/90 text-white shadow-xl border-2 border-white/30 backdrop-blur-sm"
-                      onClick={handleZoomOut}
-                      title="Zoom out"
-                    >
-                      <Minus className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      <Dialog open={expandedCard === 'camera1' || expandedCard === 'camera2'} onOpenChange={(open) => !open && setExpandedCard(null)}>
-        <DialogContent className="max-w-4xl h-[70vh] p-0">
-          <DialogHeader className="p-6 pb-0">
-            <DialogTitle>
-              {cameraFeeds.find(f => f.id === expandedCard)?.name} - Expanded View
-            </DialogTitle>
-          </DialogHeader>
-          <div className="flex-1 p-6 pt-0">
-            <div className="relative h-full bg-black rounded-md overflow-hidden">
-              {cameraFeeds.find(f => f.id === expandedCard)?.currentVideo ? (
-                <VideoPlayer 
-                  videoSrc={cameraFeeds.find(f => f.id === expandedCard)?.currentVideo!} 
-                  initialTime={videoTimeRef.current} 
-                  onTimeUpdate={(time) => { videoTimeRef.current = time; }} 
-                />
-              ) : (
-                <div className="w-full h-full bg-gradient-to-br from-gray-800 to-gray-900 flex items-center justify-center text-white/30">
-                  <p>No video feed</p>
-                </div>
-              )}
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
 
       {/* Confirmation Dialog */}
       <AlertDialog open={confirmationDialog.isOpen} onOpenChange={(open) => !open && setConfirmationDialog({ isOpen: false, intersectionId: null, newStatus: null })}>
