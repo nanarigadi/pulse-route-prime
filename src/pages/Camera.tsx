@@ -18,6 +18,7 @@ import {
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import TrafficNodeService from '@/lib/trafficNodeService';
+import { useVideoState } from '@/hooks/useVideoState';
 
 interface SelectedRegion {
   lat: number;
@@ -35,15 +36,48 @@ interface TrafficNode {
   radius: number;
 }
 
+const VideoPlayer = ({ videos, initialTime, onTimeUpdate }: { videos: string[], initialTime: number, onTimeUpdate: (time: number) => void }) => {
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  useEffect(() => {
+    if (videoRef.current) {
+      videoRef.current.src = videos[0];
+      videoRef.current.currentTime = initialTime;
+      videoRef.current.play();
+    }
+  }, [videos, initialTime]);
+
+  return (
+    <div className="relative w-full h-full">
+      <video
+        ref={videoRef}
+        className="w-full h-full object-cover"
+        autoPlay
+        muted
+        loop
+        onTimeUpdate={() => {
+          if (videoRef.current) {
+            onTimeUpdate(videoRef.current.currentTime);
+          }
+        }}
+      >
+        Your browser does not support the video tag.
+      </video>
+    </div>
+  );
+};
+
 const Camera = () => {
   const [selectedRegion, setSelectedRegion] = useState<SelectedRegion | null>(null);
   const [trafficNodes, setTrafficNodes] = useState<TrafficNode[]>([]);
   const [isMaximized, setIsMaximized] = useState(false);
   const [expandedCard, setExpandedCard] = useState<string | null>(null);
+  const videoTimeRef = useRef(0);
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<L.Map | null>(null);
   const nodesLayerRef = useRef<L.LayerGroup | null>(null);
   const circleRef = useRef<L.Circle | null>(null);
+  const { videos } = useVideoState();
 
   useEffect(() => {
     const storedRegion = localStorage.getItem('selectedRegion');
@@ -71,7 +105,7 @@ const Camera = () => {
         mapInstanceRef.current = null;
       }
     };
-  }, [selectedRegion]);
+  }, [selectedRegion, expandedCard]);
 
   const initializeMap = () => {
     if (!selectedRegion || !mapRef.current) return;
@@ -81,20 +115,27 @@ const Camera = () => {
       mapInstanceRef.current = null;
     }
 
-    const mapCenter = L.latLng(selectedRegion.lat, selectedRegion.lng);
-    const radius = 1000;
-    const mapBounds = mapCenter.toBounds(radius * 2);
-    
+    const savedMapState = JSON.parse(localStorage.getItem('mapState') || '{}');
+
+    const mapCenter = savedMapState.center || L.latLng(selectedRegion.lat, selectedRegion.lng);
+    const mapZoom = savedMapState.zoom || 16;
+
     const map = L.map(mapRef.current, {
-      center: [selectedRegion.lat, selectedRegion.lng],
-      zoom: 16,
+      center: mapCenter,
+      zoom: mapZoom,
       zoomControl: false,
       attributionControl: true,
       maxZoom: 17,
       minZoom: 15,
       preferCanvas: false,
-      maxBounds: mapBounds,
-      maxBoundsViscosity: 1.0
+    });
+
+    map.on('moveend', () => {
+      localStorage.setItem('mapState', JSON.stringify({ center: map.getCenter(), zoom: map.getZoom() }));
+    });
+
+    map.on('zoomend', () => {
+      localStorage.setItem('mapState', JSON.stringify({ center: map.getCenter(), zoom: map.getZoom() }));
     });
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -115,8 +156,6 @@ const Camera = () => {
       fillColor: '#3b82f6',
       fillOpacity: 0.1
     }).addTo(map);
-
-    map.fitBounds(mapBounds, { padding: [10, 10] });
 
     nodesLayerRef.current = L.layerGroup().addTo(map);
     mapInstanceRef.current = map;
@@ -203,6 +242,7 @@ const Camera = () => {
     const expandedNodesLayerRef = useRef<L.LayerGroup | null>(null);
 
     React.useEffect(() => {
+      if (expandedCard === 'camera3') return;
       if (!expandedMapRef.current || expandedMapInstanceRef.current || !selectedRegion) return;
 
       const timer = setTimeout(() => {
@@ -316,6 +356,120 @@ const Camera = () => {
       const trafficNodeService = TrafficNodeService.getInstance();
       trafficNodeService.refresh();
     };
+
+    if (expandedCard === 'camera3') {
+      return (
+        <div className="h-screen flex bg-background overflow-hidden animate-in fade-in-0 slide-in-from-right-4 duration-300">
+          <Sidebar />
+          <div className="flex-1 flex flex-col p-4 overflow-hidden">
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h1 className="text-2xl font-bold text-foreground">Camera 3 - Expanded View</h1>
+                <p className="text-muted-foreground">
+                  Live video feed from control signals.
+                </p>
+              </div>
+              <Button
+                onClick={() => setExpandedCard(null)}
+                size="sm"
+                variant="outline"
+              >
+                <X className="h-4 w-4 mr-2" />
+                Back to Grid
+              </Button>
+            </div>
+            <div className="flex-1 grid grid-cols-1 lg:grid-cols-3 gap-4 overflow-hidden">
+              <div className="lg:col-span-2 animate-in slide-in-from-left-6 duration-500 delay-150">
+                <Card className="h-full bg-gradient-card border-border/50 backdrop-blur-glass">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="flex items-center justify-between text-sm">
+                      <div className="flex items-center gap-2">
+                        <div className="w-2 h-2 rounded-full bg-green-500" />
+                        <span className="font-medium">Live Camera Feed</span>
+                      </div>
+                      <Badge variant="outline" className="text-xs">
+                        Control Signals
+                      </Badge>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="pt-0 pb-4" style={{ height: 'calc(100% - 80px)' }}>
+                    <div className="relative w-full h-full rounded-lg overflow-hidden">
+                      {videos.length > 0 ? (
+                        <VideoPlayer videos={videos} initialTime={videoTimeRef.current} onTimeUpdate={(time) => { videoTimeRef.current = time; }} />
+                      ) : (
+                        <div className="w-full h-full bg-gradient-to-br from-gray-800 to-gray-900 flex items-center justify-center text-white/30">
+                          <p>No video feed</p>
+                        </div>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+              <div className="lg:col-span-1 animate-in slide-in-from-right-6 duration-500 delay-300">
+                <Card className="h-full bg-gradient-card border-border/50 backdrop-blur-glass">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-sm font-medium">Traffic Analytics</CardTitle>
+                  </CardHeader>
+                  <CardContent className="pt-0 space-y-4">
+                    {/* Synced Traffic Analysis */}
+                    {selectedRegion && (
+                      <>
+                        <div className="space-y-3">
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm text-muted-foreground">Traffic Level:</span>
+                            <span className={`text-sm font-medium ${getTrafficColor(selectedRegion?.trafficLevel || '')}`}>
+                              {selectedRegion?.trafficLevel}
+                            </span>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm text-muted-foreground">Vehicle Count:</span>
+                            <div className="flex items-center gap-1">
+                              <Car className="h-4 w-4 text-muted-foreground" />
+                              <span className="text-sm font-medium">{selectedRegion?.vehicleCount}</span>
+                            </div>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm text-muted-foreground">Traffic Nodes:</span>
+                            <span className="text-sm font-medium">{trafficNodes.length}</span>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm text-muted-foreground">Last Updated:</span>
+                            <span className="text-sm font-medium">{selectedRegion?.lastUpdate}</span>
+                          </div>
+                        </div>
+                        <div className="pt-4 border-t border-border">
+                          <div className="space-y-2">
+                            <div className="flex items-center justify-between text-xs">
+                              <span className="text-muted-foreground">Red Alerts:</span>
+                              <div className="flex items-center gap-1">
+                                <Activity className="h-3 w-3 text-red-500" />
+                                <span className="font-medium">{trafficNodes.filter(n => n.severity === 'red').length}</span>
+                              </div>
+                            </div>
+                            <div className="flex items-center justify-between text-xs">
+                              <span className="text-muted-foreground">Yellow Alerts:</span>
+                              <div className="flex items-center gap-1">
+                                <Activity className="h-3 w-3 text-yellow-500" />
+                                <span className="font-medium">{trafficNodes.filter(n => n.severity === 'yellow').length}</span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="pt-4 border-t border-border">
+                          <div className="text-xs text-muted-foreground">
+                            <p>Coordinates: {selectedRegion?.lat.toFixed(6)}, {selectedRegion?.lng.toFixed(6)}</p>
+                          </div>
+                        </div>
+                      </>
+                    )}
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
 
     return (
       <div className="h-screen flex bg-background overflow-hidden animate-in fade-in-0 slide-in-from-right-4 duration-300">
@@ -472,7 +626,7 @@ const Camera = () => {
     );
   };
 
-  if (expandedCard === 'selectedRegion' && selectedRegion) {
+  if ((expandedCard === 'selectedRegion' && selectedRegion) || expandedCard === 'camera3') {
     return <ExpandedView />;
   }
 
@@ -703,42 +857,104 @@ const Camera = () => {
             </Card>
           )}
 
-          {[...Array(2)].map((_, i) => (
-            <Card key={i} className="bg-gradient-card border-border/50 backdrop-blur-glass opacity-30 aspect-square flex flex-col">
-              <CardHeader className="pb-2 flex-shrink-0">
-                <CardTitle className="flex items-center justify-between text-sm">
-                  <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 rounded-full bg-gray-600" />
-                    <span className="font-medium">Camera {i + 2}</span>
-                  </div>
+          {/* Camera 2 - Offline */}
+          <Card className="bg-gradient-card border-border/50 backdrop-blur-glass opacity-30 aspect-square flex flex-col">
+            <CardHeader className="pb-2 flex-shrink-0">
+              <CardTitle className="flex items-center justify-between text-sm">
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full bg-gray-600" />
+                  <span className="font-medium">Camera 2</span>
+                </div>
+                <Badge variant="secondary" className="text-xs px-2 py-1">
+                  Offline
+                </Badge>
+              </CardTitle>
+              <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                <MapPin className="h-3 w-3" />
+                <span>Not available</span>
+              </div>
+            </CardHeader>
+            <CardContent className="pt-0 pb-3 flex-1 flex flex-col">
+              <div className="relative flex-1 bg-gray-800 rounded-md mb-3 overflow-hidden flex items-center justify-center">
+                <div className="text-center text-white/20">
+                  <div className="h-8 w-8 mx-auto mb-2 bg-gray-600 rounded" />
+                  <p className="text-sm">Offline</p>
+                </div>
+              </div>
+              <div className="space-y-1 flex-shrink-0">
+                <div className="flex items-center justify-between text-sm text-gray-500">
+                  <span>Status: Offline</span>
                   <Badge variant="secondary" className="text-xs px-2 py-1">
-                    Offline
+                    N/A
                   </Badge>
-                </CardTitle>
-                <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                  <MapPin className="h-3 w-3" />
-                  <span>Not available</span>
                 </div>
-              </CardHeader>
-              
-              <CardContent className="pt-0 pb-3 flex-1 flex flex-col">
-                <div className="relative flex-1 bg-gray-800 rounded-md mb-3 overflow-hidden flex items-center justify-center">
-                  <div className="text-center text-white/20">
-                    <div className="h-8 w-8 mx-auto mb-2 bg-gray-600 rounded" />
-                    <p className="text-sm">Offline</p>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Camera 3 - Live Video Feed */}
+          <Card className="bg-gradient-card border-border/50 backdrop-blur-glass aspect-square flex flex-col">
+            <CardHeader className="pb-2 flex-shrink-0">
+              <CardTitle className="flex items-center justify-between text-sm">
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full bg-green-500" />
+                  <span className="font-medium">Camera 3</span>
+                </div>
+                <Badge variant="outline" className="text-xs px-2 py-1">
+                  Live
+                </Badge>
+              </CardTitle>
+              <div className="flex items-center gap-1 text-xs text-muted-foreground truncate">
+                <MapPin className="h-3 w-3 flex-shrink-0" />
+                <span className="truncate">Control Signal Feed</span>
+              </div>
+            </CardHeader>
+            <CardContent className="pt-0 pb-3 flex-1 flex flex-col">
+              <div className="relative flex-1 bg-black rounded-md mb-3 overflow-hidden">
+                {videos.length > 0 ? (
+                  <VideoPlayer videos={videos} initialTime={videoTimeRef.current} onTimeUpdate={(time) => { videoTimeRef.current = time; }} />
+                ) : (
+                  <div className="w-full h-full bg-gradient-to-br from-gray-800 to-gray-900 flex items-center justify-center text-white/30">
+                    <p>No video feed</p>
+                  </div>
+                )}
+                <div className="absolute inset-0 pointer-events-none z-20">
+                  <div className="absolute bottom-3 right-3 pointer-events-auto">
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      className="h-9 w-9 p-0 bg-black/80 hover:bg-black/90 text-white shadow-xl border-2 border-white/30 backdrop-blur-sm transition-all duration-200 hover:scale-110 active:scale-95"
+                      onClick={() => setExpandedCard('camera3')}
+                      title="Expand card"
+                    >
+                      <Expand className="h-4 w-4 transition-transform duration-200" />
+                    </Button>
                   </div>
                 </div>
+              </div>
+              {selectedRegion && (
                 <div className="space-y-1 flex-shrink-0">
-                  <div className="flex items-center justify-between text-sm text-gray-500">
-                    <span>Status: Offline</span>
-                    <Badge variant="secondary" className="text-xs px-2 py-1">
-                      N/A
+                  <div className="flex items-center justify-between text-sm">
+                    <div className="flex items-center gap-1">
+                      <AlertTriangle className={`h-3 w-3 ${getTrafficColor(selectedRegion.trafficLevel)}`} />
+                      <span className={getTrafficColor(selectedRegion.trafficLevel)}>{selectedRegion.trafficLevel}</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <Car className="h-3 w-3 text-muted-foreground" />
+                      <span className="text-foreground">{selectedRegion.vehicleCount}</span>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center justify-between text-xs text-muted-foreground">
+                    <span>Updated: {selectedRegion.lastUpdate}</span>
+                    <Badge variant="default" className="text-xs px-2 py-1">
+                      Active
                     </Badge>
                   </div>
                 </div>
-              </CardContent>
-            </Card>
-          ))}
+              )}
+            </CardContent>
+          </Card>
         </div>
       </div>
     </div>
