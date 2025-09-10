@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { useToast } from '@/hooks/use-toast';
+import { useVideoState } from '@/hooks/useVideoState';
 import { RefreshCw, ZoomIn, ZoomOut, Plus, Minus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import TrafficNodeService from '@/lib/trafficNodeService';
@@ -34,6 +35,7 @@ interface TrafficNode {
   lng: number;
   severity: 'red' | 'yellow' | 'green';
   radius: number;
+  video: string;
 }
 
 interface RoadGeometry {
@@ -41,9 +43,21 @@ interface RoadGeometry {
   lengthMeters: number;
 }
 
+const videos = [
+  '/videos/V1.mp4',
+  '/videos/V2.mp4',
+  '/videos/V3.mp4',
+  '/videos/V4.mp4',
+  '/videos/V5.mp4',
+  '/videos/V6.mp4',
+  '/videos/V7.mp4',
+  '/videos/V8.mp4',
+];
+
 export function TrafficMap() {
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { setVideos } = useVideoState();
   const mapInstanceRef = useRef<L.Map | null>(null);
   const roadsLayerRef = useRef<L.LayerGroup | null>(null);
   const nodesLayerRef = useRef<L.LayerGroup | null>(null);
@@ -142,7 +156,8 @@ export function TrafficMap() {
         (
           way["highway"](${s},${w},${n},${e});
         );
-        out geom;`;
+        out geom;
+      `;
 
       try {
         const url = "https://overpass-api.de/api/interpreter?data=" + encodeURIComponent(overpassQuery.replace(/\n\s+/g, " "));
@@ -290,7 +305,7 @@ export function TrafficMap() {
         if (collides) continue;
 
         placements.push({ latlng: pLL, radius: areaRadius });
-        newNodes.push({ lat: p[0], lng: p[1], severity: severityType, radius: areaRadius });
+        newNodes.push({ lat: p[0], lng: p[1], severity: severityType, radius: areaRadius, video: videos[Math.floor(Math.random() * videos.length)] });
 
         // Draw highlight area
         L.circle(p, {
@@ -374,6 +389,10 @@ export function TrafficMap() {
     };
 
     const handleControlSignals = async (lat: number, lng: number, locationName: string) => {
+      // When a user clicks on "Control Signals", we now play a random video from the list.
+      const randomVideo = videos[Math.floor(Math.random() * videos.length)];
+      setVideos([randomVideo]);
+
       // Store selected region data for camera page
       const regionData = {
         lat: lat,
@@ -490,7 +509,8 @@ export function TrafficMap() {
           (
             way["highway"](${s},${w},${n},${e});
           );
-          out geom;`;
+          out geom;
+        `;
 
         try {
           const url = "https://overpass-api.de/api/interpreter?data=" + encodeURIComponent(overpassQuery.replace(/\n\s+/g, " "));
