@@ -37,6 +37,12 @@ const WeatherMap = () => {
   const [weather, setWeather] = useState<any>(null);
   const [clickData, setClickData] = useState<any>(null);
 
+  // ✅ Define Asia bounding box
+  const asiaBounds: L.LatLngBoundsExpression = [
+    [-10, 25], // Southwest corner
+    [81, 180], // Northeast corner
+  ];
+
   // Fetch live weather for Odisha (Bhubaneswar)
   useEffect(() => {
     fetch(
@@ -79,7 +85,7 @@ const WeatherMap = () => {
   return (
     <div className="relative h-full w-full">
       {/* Toggle Controls */}
-      <div className="absolute top-4 right-4 z-[1000] bg-white/80 p-2 rounded shadow space-x-2"> {/* ✅ Moved controls to the right */}
+      <div className="absolute top-4 right-4 z-[1000] bg-white/80 p-2 rounded shadow space-x-2">
         <Button
           variant={overlay === "rain" ? "default" : "outline"}
           size="sm"
@@ -108,6 +114,9 @@ const WeatherMap = () => {
         center={odishaCoords}
         zoom={7}
         style={{ height: "100%", width: "100%", borderRadius: "12px" }}
+        maxBounds={asiaBounds}       // ✅ Prevents panning outside Asia
+        minZoom={3}                  // ✅ Prevents zooming out too much
+        maxBoundsViscosity={1.0}     // ✅ Strong lock to bounds
       >
         {/* Base OSM tiles */}
         <TileLayer
