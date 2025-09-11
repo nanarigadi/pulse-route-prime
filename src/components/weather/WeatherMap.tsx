@@ -9,7 +9,13 @@ import { Button } from "@/components/ui/button";
 // Fix Leaflet marker icon issue in React
 import iconUrl from "leaflet/dist/images/marker-icon.png";
 import iconShadow from "leaflet/dist/images/marker-shadow.png";
-const DefaultIcon = L.icon({ iconUrl, shadowUrl: iconShadow });
+const DefaultIcon = L.icon({
+  iconUrl,
+  shadowUrl: iconShadow,
+  iconSize: [25, 41],
+  iconAnchor: [12.5, 41], // ✅ Fix for pinpoint accuracy
+  popupAnchor: [0, -41],
+});
 L.Marker.prototype.options.icon = DefaultIcon;
 
 // OpenWeatherMap API key
@@ -30,6 +36,12 @@ const WeatherMap = () => {
   const [overlay, setOverlay] = useState<"rain" | "clouds" | "temp">("rain");
   const [weather, setWeather] = useState<any>(null);
   const [clickData, setClickData] = useState<any>(null);
+
+  // ✅ Define Asia bounding box
+  const asiaBounds: L.LatLngBoundsExpression = [
+    [-10, 25], // Southwest corner
+    [81, 180], // Northeast corner
+  ];
 
   // Fetch live weather for Odisha (Bhubaneswar)
   useEffect(() => {
@@ -102,6 +114,9 @@ const WeatherMap = () => {
         center={odishaCoords}
         zoom={7}
         style={{ height: "100%", width: "100%", borderRadius: "12px" }}
+        maxBounds={asiaBounds}       // ✅ Prevents panning outside Asia
+        minZoom={3}                  // ✅ Prevents zooming out too much
+        maxBoundsViscosity={1.0}     // ✅ Strong lock to bounds
       >
         {/* Base OSM tiles */}
         <TileLayer
